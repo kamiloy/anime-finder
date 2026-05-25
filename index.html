@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no"/>
+<title>FanJi · 番剧探索</title>
+<meta name="description" content="发现你的下一部好番 - 来自 Bangumi 的真实评分与简介"/>
+<meta name="theme-color" content="#0e0e10"/>
+<link rel="manifest" href="./manifest.json"/>
+<link rel="apple-touch-icon" href="./apple-touch-icon.png"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="FanJi"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#080810;--bg2:#0f0f1a;--bg3:#16162a;--bg4:#242438;
+  --text:#f0f0ff;--text2:#8888aa;--text3:#55557a;
+  --border:rgba(168,85,247,0.15);--border2:rgba(168,85,247,0.3);
+  --green:#a855f7;--green-glow:rgba(168,85,247,0.15);
+  --cyan:#06b6d4;--cyan-glow:rgba(6,182,212,0.15);
+  --blue:#3b82f6;--blue-glow:rgba(59,130,246,0.15);
+  --amber:#f59e0b;--red:#ef4444;
+  --neon-purple:rgba(168,85,247,0.5);--neon-cyan:rgba(6,182,212,0.4);
+  --radius:10px;--radius-lg:16px;
+  --transition:0.2s cubic-bezier(0.4,0,0.2,1);
+  --safe-top:env(safe-area-inset-top,0);
+  --safe-bot:env(safe-area-inset-bottom,0);
+  --nav-h:60px;
+  --bottom-nav-h:64px;
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;padding-bottom:calc(var(--bottom-nav-h) + var(--safe-bot))}
+/* 全局背景光晕 + 扫描线质感 */
+body::before{content:'';position:fixed;top:-20%;left:-10%;width:60%;height:60%;background:radial-gradient(ellipse,rgba(168,85,247,0.07) 0%,transparent 70%);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;bottom:-20%;right:-10%;width:50%;height:50%;background:radial-gradient(ellipse,rgba(6,182,212,0.06) 0%,transparent 70%);pointer-events:none;z-index:0}
+.scanlines{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:1;opacity:0.5}
+
+/* 顶栏 */
+.navbar{position:sticky;top:0;z-index:50;background:rgba(8,8,16,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:0.5px solid rgba(168,85,247,0.2);padding:calc(var(--safe-top) + 0px) 1rem 0;height:calc(var(--nav-h) + var(--safe-top));display:flex;align-items:center;gap:10px}
+.logo{font-size:18px;font-weight:800;letter-spacing:-0.5px;display:flex;align-items:center;gap:8px;cursor:pointer;white-space:nowrap}
+.logo-name{background:linear-gradient(90deg,#a855f7,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#06b6d4);box-shadow:0 0 10px var(--neon-purple),0 0 20px rgba(168,85,247,0.3);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.nav-search{position:relative;flex:1}
+.nav-search input{width:100%;background:var(--bg2);border:0.5px solid var(--border2);border-radius:99px;padding:8px 14px 8px 36px;font-size:14px;color:var(--text);outline:none;transition:border-color var(--transition)}
+.nav-search input:focus{border-color:var(--green)}
+.nav-search input::placeholder{color:var(--text3)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;pointer-events:none}
+.install-btn{background:var(--green);color:#000;border:none;font-size:12px;font-weight:600;padding:7px 14px;border-radius:99px;cursor:pointer;display:none;align-items:center;gap:4px}
+.install-btn.show{display:flex}
+
+/* 英雄区 */
+.hero{padding:1.5rem 1rem 1rem;max-width:1100px;margin:0 auto}
+.hero h1{font-size:clamp(22px,5vw,32px);font-weight:800;line-height:1.2;margin-bottom:6px;letter-spacing:-0.8px}
+.hero h1 span{background:linear-gradient(90deg,#a855f7,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:13px;color:var(--text2);margin-bottom:1rem}
+.filters-wrap{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.filters-wrap::-webkit-scrollbar{display:none}
+.filter-tag{font-size:12px;padding:6px 14px;border-radius:99px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all var(--transition);white-space:nowrap;flex-shrink:0}
+.filter-tag:active{transform:scale(0.95)}
+.filter-tag.active{background:var(--green-glow);border-color:var(--green);color:var(--green)}
+
+.year-filters{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.year-select{font-size:12px;padding:6px 14px;border-radius:99px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;outline:none;-webkit-appearance:none;appearance:none}
+.year-select:focus{border-color:var(--green)}
+.airing-btn{font-size:12px;padding:6px 14px;border-radius:99px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all var(--transition);white-space:nowrap}
+.airing-btn.active{background:rgba(6,182,212,0.12);border-color:var(--cyan);color:var(--cyan)}
+
+.main{max-width:1100px;margin:0 auto;padding:0 1rem 2rem}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-title{font-size:15px;font-weight:500;color:var(--text)}
+.count-badge{font-size:12px;color:var(--text3);background:var(--bg3);padding:3px 10px;border-radius:99px}
+
+.view{display:none;animation:fadeIn 0.3s ease}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* 卡片网格 */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media (min-width:480px){.grid{grid-template-columns:repeat(3,1fr);gap:12px}}
+@media (min-width:768px){.grid{grid-template-columns:repeat(4,1fr);gap:14px}}
+@media (min-width:1024px){.grid{grid-template-columns:repeat(5,1fr)}}
+.card{background:rgba(15,15,26,0.75);border:0.5px solid rgba(168,85,247,0.18);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:all var(--transition);position:relative;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+.card:hover{border-color:rgba(168,85,247,0.45);box-shadow:0 4px 20px rgba(0,0,0,0.5),0 0 24px rgba(168,85,247,0.1)}
+.card:active{transform:scale(0.97);box-shadow:0 2px 10px rgba(0,0,0,0.5),0 0 30px rgba(168,85,247,0.2)}
+.card-img-wrap{position:relative;overflow:hidden;aspect-ratio:2/3}
+.card img{width:100%;height:100%;object-fit:cover;display:block;background:var(--bg3)}
+.fav-btn{position:absolute;top:6px;right:6px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:none;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all var(--transition);z-index:2}
+.fav-btn:active{transform:scale(0.85)}
+/* 追番状态颜色 */
+.fav-btn.s-wish{color:#a1a1aa}
+.fav-btn.s-watching{color:var(--green)}
+.fav-btn.s-watched{color:var(--blue)}
+.fav-btn.s-hold{color:var(--amber)}
+.fav-btn.s-dropped{color:var(--red)}
+.rank-badge{position:absolute;top:6px;left:6px;background:linear-gradient(135deg,var(--amber),#dc7000);color:#000;font-size:10px;font-weight:700;padding:3px 7px;border-radius:99px;z-index:2}
+.rank-badge.gold{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+.rank-badge.silver{background:linear-gradient(135deg,#e5e7eb,#9ca3af)}
+.rank-badge.bronze{background:linear-gradient(135deg,#d97706,#92400e);color:#fff}
+.card-body{padding:8px 10px 10px}
+.card-title{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.8em}
+.card-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.card-score{font-size:11px;color:var(--amber);font-weight:500}
+.card-score.none{color:var(--text3)}
+.card-year{font-size:10px;color:var(--text3)}
+.card-user-rating{font-size:10px;color:var(--amber);margin-left:6px}
+.card-time{font-size:10px;color:var(--text3);margin-left:6px}
+.card-tags{display:flex;flex-wrap:wrap;gap:3px}
+.tag-pill{font-size:10px;padding:1px 6px;border-radius:99px;background:var(--bg3);color:var(--text3);border:0.5px solid var(--border)}
+.message{text-align:center;padding:3rem 0;color:var(--text3);font-size:13px;grid-column:1/-1}
+.empty-state{text-align:center;padding:4rem 1rem;color:var(--text3);grid-column:1/-1}
+.empty-state .icon{font-size:48px;margin-bottom:12px;opacity:0.5}
+.empty-state h3{font-size:15px;font-weight:500;color:var(--text2);margin-bottom:6px}
+.empty-state p{font-size:13px;color:var(--text3)}
+.loading-dots{display:inline-flex;gap:4px}
+.loading-dots span{width:6px;height:6px;border-radius:50%;background:var(--green);animation:dot 1.2s infinite}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* 翻页 */
+.pagination{display:flex;gap:6px;justify-content:center;margin-top:1.5rem;flex-wrap:wrap}
+.page-btn{font-size:12px;padding:7px 12px;border-radius:var(--radius);border:0.5px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;transition:all var(--transition);min-width:36px}
+.page-btn:active{background:var(--bg3)}
+.page-btn.active{background:var(--green);border-color:var(--green);color:#000;font-weight:500}
+
+/* 新番时间表 */
+.schedule-wrap{display:flex;flex-direction:column;gap:1.25rem}
+.day-header{display:flex;align-items:center;gap:10px;margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:0.5px solid var(--border)}
+.today-group{background:linear-gradient(180deg,rgba(168,85,247,0.07) 0%,transparent 100%);margin-left:-1rem;margin-right:-1rem;padding:1rem;border-radius:var(--radius-lg);margin-bottom:1.5rem;border-left:2px solid rgba(168,85,247,0.4)}
+.today-group .day-header{border-bottom-color:rgba(168,85,247,0.25)}
+.today-group .day-num{background:linear-gradient(135deg,#a855f7,#06b6d4);color:#fff;font-weight:700;box-shadow:0 0 12px rgba(168,85,247,0.4)}
+.day-num{background:var(--green-glow);color:var(--green);font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px}
+.day-name{font-size:14px;font-weight:500}
+.day-name.today{color:var(--green)}
+.day-count{font-size:11px;color:var(--text3);margin-left:auto}
+
+/* 详情抽屉 */
+.drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;opacity:0;pointer-events:none;transition:opacity var(--transition);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.drawer-bg.open{opacity:1;pointer-events:all}
+.drawer{position:fixed;left:0;right:0;bottom:0;top:5vh;background:rgba(12,12,22,0.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:0.5px solid rgba(168,85,247,0.2);border-bottom:none;z-index:201;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);overflow-y:auto;display:flex;flex-direction:column;border-radius:20px 20px 0 0;-webkit-overflow-scrolling:touch;box-shadow:0 -8px 40px rgba(168,85,247,0.15)}
+@media (min-width:768px){
+  .drawer{left:auto;top:0;width:480px;border-radius:0;transform:translateX(100%)}
+  .drawer-bg.open .drawer{transform:translateX(0)}
+}
+.drawer-bg.open .drawer{transform:translateY(0)}
+@media (min-width:768px){.drawer-bg.open .drawer{transform:translateX(0)}}
+.drawer-handle{width:36px;height:4px;background:var(--bg4);border-radius:2px;margin:8px auto 0;flex-shrink:0}
+@media (min-width:768px){.drawer-handle{display:none}}
+.drawer-header{position:sticky;top:0;background:var(--bg2);border-bottom:0.5px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;z-index:1;gap:8px}
+.drawer-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.drawer-icon-btn{background:var(--bg3);border:none;color:var(--text2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all var(--transition)}
+.drawer-icon-btn:active{transform:scale(0.9);background:var(--bg4)}
+.drawer-icon-btn.status-active{color:var(--green)}
+.drawer-body{padding:16px;flex:1;padding-bottom:calc(16px + var(--safe-bot))}
+.drawer-cover{width:100%;height:220px;object-fit:cover;border-radius:var(--radius-lg);margin-bottom:14px;background:var(--bg3)}
+.drawer-title{font-size:18px;font-weight:600;margin-bottom:4px;line-height:1.3}
+.drawer-subtitle{font-size:13px;color:var(--text2);margin-bottom:12px}
+.drawer-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.drawer-tag{font-size:11px;padding:3px 10px;border-radius:99px;background:var(--bg3);color:var(--text2);border:0.5px solid var(--border2)}
+.rating-section{background:var(--bg3);border-radius:var(--radius-lg);padding:14px;margin-bottom:14px}
+.rating-top{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.rating-num{font-size:42px;font-weight:800;background:linear-gradient(135deg,var(--amber),#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;letter-spacing:-1px}
+.rating-stars{display:flex;gap:2px;margin-bottom:3px}
+.star{font-size:15px;color:var(--amber)}
+.star.empty{color:var(--bg4)}
+.rating-info{font-size:12px;color:var(--text3)}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.bar-label{font-size:11px;color:var(--text3);width:18px;text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;background:var(--amber);border-radius:2px;transition:width 0.6s cubic-bezier(0.4,0,0.2,1)}
+.bar-count{font-size:10px;color:var(--text3);width:28px}
+.desc-section{margin-bottom:14px}
+.section-label{font-size:12px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.desc-text{font-size:13px;color:var(--text2);line-height:1.8}
+.desc-text.collapsed{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.expand-btn{font-size:12px;color:var(--green);cursor:pointer;margin-top:4px;background:none;border:none;padding:0}
+.watch-section{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.watch-btn{padding:10px;border-radius:var(--radius);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:12px;text-align:center;text-decoration:none;transition:all var(--transition);display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit}
+.watch-btn:active{background:var(--bg4);transform:scale(0.97)}
+.watch-btn.primary{background:var(--green-glow);border-color:var(--green);color:var(--green);grid-column:1/-1;font-weight:500;padding:12px}
+
+/* 追番状态选择器（抽屉内） */
+.track-section{background:var(--bg3);border-radius:var(--radius-lg);padding:12px 14px;margin-bottom:14px}
+.track-section .section-label{margin-bottom:10px}
+.track-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0}
+.track-btn{font-size:12px;padding:6px 12px;border-radius:99px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all var(--transition);white-space:nowrap;font-family:inherit}
+.track-btn:active{transform:scale(0.93)}
+.track-btn[data-s="wish"].tb-active{background:rgba(161,161,170,0.15);border-color:#a1a1aa;color:#e4e4e7}
+.track-btn[data-s="watching"].tb-active{background:var(--green-glow);border-color:var(--green);color:var(--green)}
+.track-btn[data-s="watched"].tb-active{background:var(--blue-glow);border-color:var(--blue);color:var(--blue)}
+.track-btn[data-s="hold"].tb-active{background:rgba(245,158,11,0.15);border-color:var(--amber);color:var(--amber)}
+.track-btn[data-s="dropped"].tb-active{background:rgba(239,68,68,0.15);border-color:var(--red);color:var(--red)}
+.eps-row{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)}
+.eps-row span{font-size:12px;color:var(--text3)}
+.eps-adj{width:28px;height:28px;border-radius:50%;background:var(--bg4);border:none;color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:background var(--transition);flex-shrink:0}
+.eps-adj:active{background:var(--border2)}
+.eps-num{font-size:16px;font-weight:600;color:var(--text);min-width:28px;text-align:center}
+.rating-row{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)}
+.rating-row span{font-size:12px;color:var(--text3)}
+.stars{display:flex;gap:2px;cursor:pointer}
+.star{font-size:16px;color:var(--text3);transition:all var(--transition);user-select:none}
+.star.active{color:var(--amber);text-shadow:0 0 6px rgba(245,158,11,0.3)}
+
+/* "我的"页面 */
+.my-hero-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.data-btn{font-size:12px;padding:7px 14px;border-radius:99px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all var(--transition);display:flex;align-items:center;gap:5px;font-family:inherit;white-space:nowrap}
+.data-btn:active{background:var(--bg3);transform:scale(0.97)}
+.my-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem}
+.stat-item{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 8px;text-align:center}
+.stat-num{font-size:20px;font-weight:700;line-height:1;color:var(--text)}
+.stat-label{font-size:10px;color:var(--text3);margin-top:3px}
+.stat-num.c-green{color:var(--green)}
+.stat-num.c-blue{color:var(--blue)}
+.stat-num.c-amber{color:var(--amber)}
+.status-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:1rem;-webkit-overflow-scrolling:touch}
+.status-tabs::-webkit-scrollbar{display:none}
+.status-tab{font-size:12px;padding:7px 16px;border-radius:99px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all var(--transition);white-space:nowrap;flex-shrink:0;font-family:inherit}
+.status-tab:active{transform:scale(0.95)}
+.status-tab.active{background:var(--green-glow);border-color:var(--green);color:var(--green)}
+
+/* 推荐区 */
+.rec-section{margin-bottom:1.5rem}
+.rec-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem}
+.rec-title{font-size:15px;font-weight:500;display:flex;align-items:center;gap:6px;color:var(--text)}
+.rec-icon{font-size:18px}
+.rec-refresh{background:transparent;border:0.5px solid var(--border2);color:var(--text2);padding:5px 12px;border-radius:99px;font-size:11px;cursor:pointer;transition:all var(--transition)}
+.rec-refresh:active{background:var(--bg3);color:var(--text)}
+.rec-loading{padding:2rem 0;text-align:center;color:var(--text3);font-size:13px;grid-column:1/-1}
+.rec-empty{padding:1.5rem 1rem;text-align:center;color:var(--text3);font-size:12px;background:var(--bg2);border-radius:var(--radius-lg);border:0.5px dashed var(--border2);grid-column:1/-1}
+.rec-reason{position:absolute;bottom:6px;left:6px;right:6px;font-size:10px;color:#fff;background:rgba(0,0,0,0.75);padding:3px 7px;border-radius:99px;text-align:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:2;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec-intro{font-size:11px;color:var(--text3);margin-bottom:8px}
+
+/* ===== 骨架屏 ===== */
+@keyframes sk-pulse{0%,100%{opacity:0.4}50%{opacity:0.8}}
+.sk-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:480px){.sk-grid{grid-template-columns:repeat(3,1fr);gap:12px}}
+@media(min-width:768px){.sk-grid{grid-template-columns:repeat(4,1fr);gap:14px}}
+.sk-card{background:rgba(15,15,26,0.75);border:0.5px solid rgba(168,85,247,0.1);border-radius:var(--radius-lg);overflow:hidden;animation:sk-pulse 1.6s ease-in-out infinite}
+.sk-card:nth-child(2){animation-delay:.15s}.sk-card:nth-child(3){animation-delay:.3s}
+.sk-card:nth-child(4){animation-delay:.45s}.sk-card:nth-child(5){animation-delay:.6s}
+.sk-img{aspect-ratio:2/3;background:linear-gradient(180deg,var(--bg3),var(--bg4))}
+.sk-body{padding:8px 10px 10px}
+.sk-line{height:10px;background:var(--bg3);border-radius:4px;margin-bottom:6px}
+.sk-line.s{width:55%;height:8px}.sk-line.xs{width:35%;height:8px}
+
+/* ===== 卡片入场动画 ===== */
+@keyframes cardIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.card{animation:cardIn 0.35s cubic-bezier(0.4,0,0.2,1) both}
+
+/* ===== Ripple 水波纹 ===== */
+.ripple-wrap{position:relative;overflow:hidden}
+@keyframes ripple-anim{to{transform:scale(4);opacity:0}}
+.ripple-dot{position:absolute;border-radius:50%;background:rgba(168,85,247,0.35);transform:scale(0);animation:ripple-anim 0.55s ease-out forwards;pointer-events:none}
+
+/* ===== 吉祥物 + 气泡 ===== */
+.mascot-block{display:flex;flex-direction:column;align-items:center;gap:10px;padding:2rem 1rem;grid-column:1/-1}
+.mascot-svg{width:110px;height:120px;filter:drop-shadow(0 0 18px rgba(168,85,247,0.35))}
+.speech-bubble{background:var(--bg3);border:0.5px solid rgba(168,85,247,0.3);border-radius:16px;border-bottom-left-radius:4px;padding:10px 16px;font-size:13px;color:var(--text2);line-height:1.6;text-align:center;max-width:220px;position:relative}
+.speech-bubble::before{content:'';position:absolute;bottom:100%;left:28px;border:8px solid transparent;border-bottom-color:rgba(168,85,247,0.3)}
+.speech-bubble::after{content:'';position:absolute;bottom:100%;left:29.5px;border:7px solid transparent;border-bottom-color:var(--bg3)}
+
+/* 底部导航栏 */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(8,8,16,0.94);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:0.5px solid rgba(168,85,247,0.2);display:flex;justify-content:space-around;padding:8px 0 calc(8px + var(--safe-bot));height:calc(var(--bottom-nav-h) + var(--safe-bot))}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:10px;padding:4px;transition:color var(--transition);position:relative}
+.bn-item.active{color:var(--green)}
+.bn-icon{font-size:22px;line-height:1}
+.bn-label{font-size:10px;font-weight:500}
+.bn-badge{position:absolute;top:0;right:calc(50% - 18px);background:var(--green);color:#000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;min-width:16px;text-align:center}
+
+/* Toast */
+.toast{position:fixed;bottom:calc(var(--bottom-nav-h) + var(--safe-bot) + 16px);left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg3);color:var(--text);padding:10px 18px;border-radius:99px;font-size:13px;border:0.5px solid var(--border2);z-index:300;opacity:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);box-shadow:0 8px 24px rgba(0,0,0,0.4);pointer-events:none;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast-undo{color:var(--green);cursor:pointer;font-weight:600;font-size:13px;border:none;background:none;padding:2px 0;white-space:nowrap}
+
+/* iOS 安装提示 */
+.ios-install-tip{position:fixed;bottom:calc(var(--bottom-nav-h) + var(--safe-bot) + 12px);left:12px;right:12px;background:var(--bg3);border:0.5px solid var(--green);border-radius:var(--radius-lg);padding:12px 14px;z-index:90;display:none;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+.ios-install-tip.show{display:flex}
+.ios-install-tip-text{flex:1;font-size:12px;color:var(--text);line-height:1.5}
+.ios-install-tip-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo" id="logoHome"><div class="logo-dot"></div><span class="logo-name">FanJi</span><span style="font-size:10px;color:var(--text3);font-weight:400;margin-left:1px;letter-spacing:0">番迹</span></div>
+  <div class="nav-search">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="搜索动漫..."/>
+  </div>
+  <button class="install-btn" id="installBtn">📲 安装</button>
+</nav>
+
+<!-- 热门 -->
+<div class="view active" id="view-hot">
+  <div class="hero">
+    <h1>发现你的下一部<span>好番</span></h1>
+    <p>来自 Bangumi 的真实评分 · 你的二次元探索基地</p>
+    <div class="filters-wrap" id="tagFilters">
+      <span class="filter-tag active" data-val="">综合热门</span>
+      <span class="filter-tag" data-val="热血">热血</span>
+      <span class="filter-tag" data-val="治愈">治愈</span>
+      <span class="filter-tag" data-val="恋爱">恋爱</span>
+      <span class="filter-tag" data-val="冒险">冒险</span>
+      <span class="filter-tag" data-val="科幻">科幻</span>
+      <span class="filter-tag" data-val="悬疑">悬疑</span>
+      <span class="filter-tag" data-val="搞笑">搞笑</span>
+      <span class="filter-tag" data-val="奇幻">奇幻</span>
+      <span class="filter-tag" data-val="运动">运动</span>
+    </div>
+    <div class="year-filters" id="hotYearFilters">
+      <select class="year-select" id="hotYearSelect"><option value="">📅 全部年份</option></select>
+      <button class="airing-btn" id="hotAiringBtn">🟢 热播中</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="section-header">
+      <span class="section-title" id="hotTitle">综合热门番剧</span>
+      <span class="count-badge" id="hotCount">加载中</span>
+    </div>
+    <div class="grid" id="hotGrid"><div class="message"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+    <div class="pagination" id="hotPagination"></div>
+  </div>
+</div>
+
+<!-- 排行榜 -->
+<div class="view" id="view-ranking">
+  <div class="hero">
+    <h1>动漫<span>排行榜</span></h1>
+    <p>按评分排序，最受欢迎的高分番剧</p>
+  </div>
+  <div class="year-filters" id="rankYearFilters">
+    <select class="year-select" id="rankYearSelect"><option value="">📅 全部年份</option></select>
+    <button class="airing-btn" id="rankAiringBtn">🟢 热播中</button>
+  </div>
+  <div class="main">
+    <div class="section-header">
+      <span class="section-title">📊 评分总榜</span>
+      <span class="count-badge" id="rankCount">加载中</span>
+    </div>
+    <div class="grid" id="rankGrid"><div class="message"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+    <div class="pagination" id="rankPagination"></div>
+  </div>
+</div>
+
+<!-- 新番 -->
+<div class="view" id="view-schedule">
+  <div class="hero">
+    <h1>本季<span>新番</span></h1>
+    <p>按更新日期分组，看看每天有什么可追</p>
+  </div>
+  <div class="main">
+    <div class="schedule-wrap" id="scheduleWrap"><div class="message"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+  </div>
+</div>
+
+<!-- 我的番单 -->
+<div class="view" id="view-my">
+  <div class="hero">
+    <h1>我的<span>番单</span></h1>
+    <p>数据存你手机，永远属于你</p>
+    <div class="my-hero-actions">
+      <button class="data-btn" id="exportBtn">📤 导出备份</button>
+      <button class="data-btn" id="importBtn">📥 导入</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="my-stats" id="myStats"></div>
+    <div class="rec-section" id="recSection" style="display:none">
+      <div class="rec-header">
+        <div class="rec-title"><span class="rec-icon">✨</span><span>为你推荐</span></div>
+        <button class="rec-refresh" id="recRefresh">🔄 换一批</button>
+      </div>
+      <div class="rec-intro" id="recIntro"></div>
+      <div class="grid" id="recGrid"></div>
+    </div>
+    <div class="status-tabs" id="statusTabs">
+      <button class="status-tab active" data-tab="all">全部</button>
+      <button class="status-tab" data-tab="watching">▶ 在看</button>
+      <button class="status-tab" data-tab="wish">🔖 想看</button>
+      <button class="status-tab" data-tab="watched">✓ 看完</button>
+      <button class="status-tab" data-tab="hold">⏸ 搁置</button>
+      <button class="status-tab" data-tab="dropped">✕ 放弃</button>
+    </div>
+    <div class="section-header">
+      <span class="section-title" id="myListTitle">全部番单</span>
+      <span class="count-badge" id="myCount">0 部</span>
+    </div>
+    <div class="grid" id="myGrid"></div>
+  </div>
+</div>
+
+<!-- 详情抽屉 -->
+<div class="drawer-bg" id="drawerBg">
+  <div class="drawer" id="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-header">
+      <span style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" id="drawerHeadTitle">详情</span>
+      <div class="drawer-actions">
+        <button class="drawer-icon-btn" id="drawerTrackQuick" title="想看">♡</button>
+        <button class="drawer-icon-btn" id="drawerClose">✕</button>
+      </div>
+    </div>
+    <div class="drawer-body" id="drawerBody">
+      <div class="message"><div class="loading-dots"><span></span><span></span><span></span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 底部导航 -->
+<nav class="bottom-nav">
+  <button class="bn-item active" data-view="hot">
+    <div class="bn-icon">🔥</div>
+    <div class="bn-label">热门</div>
+  </button>
+  <button class="bn-item" data-view="ranking">
+    <div class="bn-icon">🏆</div>
+    <div class="bn-label">排行</div>
+  </button>
+  <button class="bn-item" data-view="schedule">
+    <div class="bn-icon">📅</div>
+    <div class="bn-label">新番</div>
+  </button>
+  <button class="bn-item" data-view="my">
+    <div class="bn-icon">📋</div>
+    <div class="bn-label">我的</div>
+    <span class="bn-badge" id="bnBadge" style="display:none">0</span>
+  </button>
+</nav>
+
+<!-- iOS 安装提示 -->
+<div class="ios-install-tip" id="iosInstallTip">
+  <span style="font-size:24px">📲</span>
+  <div class="ios-install-tip-text">
+    <strong>添加到主屏幕</strong><br/>
+    点击底部分享按钮 ⬆️，选择"添加到主屏幕"
+  </div>
+  <button class="ios-install-tip-close" id="iosTipClose">✕</button>
+</div>
+
+<div class="scanlines"></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="importFile" accept=".json" style="display:none"/>
+
+<script>
+// ===== 吉祥物：紫音（番ちゃん）=====
+// 特征：紫青渐变双马尾、▶ 发夹、大眼睛、播放键发饰
+function mascotSVG(mood='happy'){
+  const mouth={
+    happy:'M42 66 Q50 72 58 66',
+    sad:'M42 70 Q50 65 58 70',
+    excited:'M43 65 Q50 73 57 65',
+  }[mood]||'M42 66 Q50 72 58 66';
+  return`<svg class="mascot-svg" viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient>
+    <linearGradient id="mg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient>
+    <linearGradient id="mg3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#0891b2"/></linearGradient>
+  </defs>
+  <!-- 后层发型 -->
+  <ellipse cx="50" cy="44" rx="33" ry="35" fill="url(#mg1)"/>
+  <!-- 左马尾 -->
+  <path d="M21 57 Q6 72 10 94 Q15 100 22 88 Q17 72 29 62Z" fill="url(#mg1)"/>
+  <!-- 右马尾 -->
+  <path d="M79 57 Q94 72 90 94 Q85 100 78 88 Q83 72 71 62Z" fill="url(#mg3)"/>
+  <!-- 脸 -->
+  <ellipse cx="50" cy="55" rx="26" ry="27" fill="#fde8d8"/>
+  <!-- 左眼白 -->
+  <ellipse cx="37" cy="52" rx="8" ry="9" fill="white"/>
+  <!-- 左虹膜 -->
+  <ellipse cx="37" cy="53" rx="6" ry="7" fill="url(#mg2)"/>
+  <!-- 左瞳孔 -->
+  <ellipse cx="37" cy="53" rx="3.5" ry="4" fill="#150a28"/>
+  <!-- 左高光 -->
+  <ellipse cx="39.5" cy="50" rx="1.8" ry="1.8" fill="white" opacity="0.95"/>
+  <ellipse cx="35.5" cy="55" rx="0.9" ry="0.9" fill="white" opacity="0.6"/>
+  <!-- 左上睫毛 -->
+  <path d="M29 47 Q37 42 45 47" stroke="#2d1b4e" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <!-- 右眼白 -->
+  <ellipse cx="63" cy="52" rx="8" ry="9" fill="white"/>
+  <!-- 右虹膜 -->
+  <ellipse cx="63" cy="53" rx="6" ry="7" fill="url(#mg2)"/>
+  <!-- 右瞳孔 -->
+  <ellipse cx="63" cy="53" rx="3.5" ry="4" fill="#150a28"/>
+  <!-- 右高光 -->
+  <ellipse cx="65.5" cy="50" rx="1.8" ry="1.8" fill="white" opacity="0.95"/>
+  <ellipse cx="61.5" cy="55" rx="0.9" ry="0.9" fill="white" opacity="0.6"/>
+  <!-- 右上睫毛 -->
+  <path d="M55 47 Q63 42 71 47" stroke="#2d1b4e" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <!-- 鼻子 -->
+  <circle cx="50" cy="61" r="1.2" fill="#e09080" opacity="0.55"/>
+  <!-- 嘴 -->
+  <path d="${mouth}" stroke="#c97060" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <!-- 腮红 -->
+  <ellipse cx="31" cy="62" rx="6.5" ry="3.5" fill="#ffaaaa" opacity="0.38"/>
+  <ellipse cx="69" cy="62" rx="6.5" ry="3.5" fill="#ffaaaa" opacity="0.38"/>
+  <!-- 前刘海 -->
+  <path d="M20 40 Q28 18 50 16 Q72 18 80 40 Q73 30 66 35 Q59 23 50 24 Q41 23 34 35 Q27 30 20 40Z" fill="url(#mg1)"/>
+  <!-- 左发夹：▶ 紫色 -->
+  <circle cx="27" cy="27" r="7.5" fill="rgba(168,85,247,0.25)" stroke="#a855f7" stroke-width="1.2"/>
+  <polygon points="24,24 24,30 30,27" fill="#a855f7"/>
+  <!-- 右发夹：▶ 青色 -->
+  <circle cx="73" cy="27" r="7.5" fill="rgba(6,182,212,0.25)" stroke="#06b6d4" stroke-width="1.2"/>
+  <polygon points="70,24 70,30 76,27" fill="#06b6d4"/>
+  <!-- 身体剪影（胸部以上） -->
+  <path d="M32 100 Q30 88 26 85 Q38 80 50 80 Q62 80 74 85 Q70 88 68 100Z" fill="url(#mg1)" opacity="0.6"/>
+  <path d="M36 100 Q38 88 50 86 Q62 88 64 100Z" fill="#e8d0f8" opacity="0.8"/>
+</svg>`;
+}
+
+// 骨架屏 HTML
+function skeletonGrid(n=6){
+  const card=`<div class="sk-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line"></div><div class="sk-line s"></div><div class="sk-line xs"></div></div></div>`;
+  return`<div class="sk-grid">${Array(n).fill(card).join('')}</div>`;
+}
+
+// 吉祥物空状态
+function mascotEmpty(text,mood='happy'){
+  return`<div class="mascot-block">${mascotSVG(mood)}<div class="speech-bubble">${text}</div></div>`;
+}
+
+async function openWatchUrl(url){
+  try{
+    if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser){
+      await window.Capacitor.Plugins.Browser.open({url,presentationStyle:'fullscreen'});
+      return;
+    }
+  }catch(e){}
+  window.open(url,'_blank','noopener,noreferrer');
+}
+
+// ===== 常量 =====
+const PAGE=20;
+const TRACKER_KEY='fanji_tracker_v2';
+const OLD_FAV_KEY='fanji_favorites';
+const IOS_TIP_KEY='fanji_ios_tip_dismissed';
+const STATUS_LABELS={wish:'想看',watching:'在看',watched:'看完',hold:'搁置',dropped:'放弃'};
+const STATUS_ICONS={wish:'🔖',watching:'▶',watched:'✓',hold:'⏸',dropped:'✕'};
+
+let currentView='hot';
+let hotState={page:1,tag:'',search:'',total:0,year:'',airing:false};
+let rankState={page:1,total:0,year:'',airing:false};
+let currentDetailAnime=null;
+let deferredInstallPrompt=null;
+let myTab='all';
+
+// ===== API =====
+const makeFilter=(extra={})=>{const f={type:[2],...extra};return JSON.stringify(f);};
+const fetchHot=(o,extra)=>fetch(`https://api.bgm.tv/v0/search/subjects?limit=${PAGE}&offset=${o}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:'',sort:'heat',filter:{type:[2],...extra}})}).then(r=>r.json());
+const fetchTag=(t,o,extra)=>fetch(`https://api.bgm.tv/v0/search/subjects?limit=${PAGE}&offset=${o}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:'',sort:'heat',filter:{type:[2],tag:[t],...extra}})}).then(r=>r.json());
+const fetchSearch=(q,o,extra)=>fetch(`https://api.bgm.tv/v0/search/subjects?limit=${PAGE}&offset=${o}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:q,filter:{type:[2],...extra}})}).then(r=>r.json());
+const fetchRanking=(o,extra)=>fetch(`https://api.bgm.tv/v0/search/subjects?limit=${PAGE}&offset=${o}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:'',sort:'rank',filter:{type:[2],...extra}})}).then(r=>r.json());
+const fetchCalendar=()=>fetch('https://api.bgm.tv/calendar').then(r=>r.json());
+const fetchDetail=id=>fetch(`https://api.bgm.tv/v0/subjects/${id}`).then(r=>r.json());
+
+// ===== 追番状态系统 =====
+function getTracker(){try{return JSON.parse(localStorage.getItem(TRACKER_KEY)||'{}')}catch(e){return{}}}
+function saveTracker(t){
+  try{localStorage.setItem(TRACKER_KEY,JSON.stringify(t))}
+  catch(e){showToast('存储空间不足！请导出数据后清理一些番剧');throw e}
+}
+function getEntry(id){return getTracker()[id]||null}
+
+function setStatus(anime,status,progress,rating){
+  const t=getTracker();
+  if(!status){
+    delete t[anime.id];
+  }else{
+    const existing=t[anime.id];
+    const isWatched=status==='watched'||status==='dropped';
+    const wasWatched=existing&&(existing.status==='watched'||existing.status==='dropped');
+    t[anime.id]={
+      status,
+      progress:progress!=null?progress:(existing?.progress||0),
+      rating:rating!=null?rating:(existing?.rating||0),
+      addedAt:existing?.addedAt||Date.now(),
+      updatedAt:Date.now(),
+      completedAt:isWatched?(existing?.completedAt||Date.now()):(wasWatched?null:existing?.completedAt),
+      anime:{id:anime.id,name:anime.name,name_cn:anime.name_cn,images:anime.images,score:anime.score,date:anime.date,tags:anime.tags,eps:anime.eps}
+    };
+  }
+  saveTracker(t);
+}
+
+function migrateFromFavorites(){
+  const old=localStorage.getItem(OLD_FAV_KEY);
+  if(!old)return;
+  const tracker=getTracker();
+  if(Object.keys(tracker).length>0)return;
+  try{
+    const favs=JSON.parse(old);
+    if(!Array.isArray(favs)||!favs.length)return;
+    const newT={};
+    favs.forEach(a=>{
+      newT[a.id]={status:'wish',progress:0,addedAt:Date.now(),updatedAt:Date.now(),
+        anime:{id:a.id,name:a.name,name_cn:a.name_cn,images:a.images,score:a.score,date:a.date,tags:a.tags}};
+    });
+    saveTracker(newT);
+    showToast(`已迁移 ${favs.length} 部收藏到番单 ✨`);
+  }catch(e){}
+}
+
+// ===== 徽章 & 状态图标 =====
+function getTrackIcon(id){
+  const e=getEntry(id);
+  if(!e)return{icon:'♡',cls:''};
+  const icons={wish:'🔖',watching:'▶',watched:'✓',hold:'⏸',dropped:'✕'};
+  const clss={wish:'s-wish',watching:'s-watching',watched:'s-watched',hold:'s-hold',dropped:'s-dropped'};
+  return{icon:icons[e.status],cls:clss[e.status]};
+}
+
+function updateMyBadge(){
+  const watching=Object.values(getTracker()).filter(e=>e.status==='watching').length;
+  const b=document.getElementById('bnBadge');
+  b.textContent=watching;
+  b.style.display=watching>0?'inline-block':'none';
+}
+
+function updateAllCardBtns(id){
+  document.querySelectorAll(`.fav-btn[data-fid="${id}"]`).forEach(btn=>{
+    const{icon,cls:sc}=getTrackIcon(id);
+    btn.innerHTML=icon;
+    btn.className=`fav-btn ${sc}`;
+  });
+}
+
+// ===== 卡片渲染 =====
+function timeAgo(ts){
+  if(!ts)return'';
+  const d=(Date.now()-ts)/1000;
+  if(d<60)return'刚刚';
+  if(d<3600)return Math.floor(d/60)+'分钟前';
+  if(d<86400)return Math.floor(d/3600)+'小时前';
+  if(d<2592000)return Math.floor(d/86400)+'天前';
+  return Math.floor(d/2592000)+'个月前';
+}
+function cardHtml(a,opts={}){
+  const img=(a.images?.common||a.images?.medium||a.images?.grid||'').replace(/^http:/,'https:');
+  const score=a.score?`★ ${a.score.toFixed(1)}`:'暂无';
+  const cls=a.score?'card-score':'card-score none';
+  const year=a.date?a.date.slice(0,4):'';
+  const tags=(a.tags||[]).slice(0,2).map(t=>`<span class="tag-pill">${typeof t==='string'?t:t.name}</span>`).join('');
+  const{icon,cls:statusCls}=getTrackIcon(a.id);
+  let rankBadge='';
+  if(opts.rank){
+    const rc=opts.rank===1?'gold':opts.rank===2?'silver':opts.rank===3?'bronze':'';
+    rankBadge=`<div class="rank-badge ${rc}">#${opts.rank}</div>`;
+  }
+  let metaExtra='';
+  if(opts.userRating)metaExtra=`<span class="card-user-rating">⭐ ${opts.userRating}</span>`;
+  if(opts.timeAgo)metaExtra+=`<span class="card-time">${opts.timeAgo}</span>`;
+  return`<div class="card" data-id="${a.id}">
+    <div class="card-img-wrap">
+      ${rankBadge}
+      <button class="fav-btn ${statusCls}" data-fid="${a.id}">${icon}</button>
+      <img src="${img}" alt="" loading="lazy"/>
+    </div>
+    <div class="card-body">
+      <div class="card-title">${a.name_cn||a.name}</div>
+      <div class="card-meta"><span class="${cls}">${score}</span><span class="card-year">${year}</span>${metaExtra}</div>
+      <div class="card-tags">${tags}</div>
+    </div>
+  </div>`;
+}
+
+function addRipple(el){
+  el.classList.add('ripple-wrap');
+  el.addEventListener('pointerdown',e=>{
+    const r=el.getBoundingClientRect();
+    const d=document.createElement('span');
+    d.className='ripple-dot';
+    const s=Math.max(r.width,r.height);
+    d.style.cssText=`width:${s}px;height:${s}px;left:${e.clientX-r.left-s/2}px;top:${e.clientY-r.top-s/2}px`;
+    el.appendChild(d);
+    d.addEventListener('animationend',()=>d.remove());
+  },{passive:true});
+}
+
+function bindCards(grid,items){
+  grid.querySelectorAll('.card').forEach((c,i)=>{
+    c.style.animationDelay=`${i*0.05}s`;
+    addRipple(c);
+    c.addEventListener('click',e=>{
+      if(e.target.closest('.fav-btn'))return;
+      openDrawer(items[i]);
+    });
+  });
+  grid.querySelectorAll('.fav-btn').forEach(b=>{
+    b.addEventListener('click',e=>{
+      e.stopPropagation();
+      const id=parseInt(b.dataset.fid);
+      const a=items.find(x=>x.id===id);
+      if(!a)return;
+      const entry=getEntry(id);
+      if(!entry){
+        setStatus(a,'wish');
+        showToast('加入想看 🔖');
+      }else if(entry.status==='wish'){
+        const undoEntry=getEntry(id);
+        const undoAnime=a;
+        setStatus(a,null);
+        showToast('已移除',()=>{
+          setStatus(undoAnime,undoEntry.status,undoEntry.progress);
+          updateMyBadge();
+          updateAllCardBtns(id);
+          if(currentView==='my')renderMyPage();
+          showToast('已恢复');
+        });
+      }else{
+        showToast(`「${STATUS_LABELS[entry.status]}」· 打开详情修改`);
+        return;
+      }
+      if(navigator.vibrate)navigator.vibrate(10);
+      updateMyBadge();
+      updateAllCardBtns(id);
+      if(currentView==='my')renderMyPage();
+    });
+  });
+}
+
+// ===== 翻页 =====
+function renderPagination(containerId,state,onPage){
+  const pg=document.getElementById(containerId);
+  const total=Math.min(Math.ceil(state.total/PAGE),15);
+  if(total<=1){pg.innerHTML='';return;}
+  const ps=[];
+  for(let i=Math.max(1,state.page-2);i<=Math.min(total,state.page+2);i++)ps.push(i);
+  pg.innerHTML=[
+    state.page>1?`<button class="page-btn" data-p="${state.page-1}">←</button>`:'',
+    ...ps.map(p=>`<button class="page-btn${p===state.page?' active':''}" data-p="${p}">${p}</button>`),
+    state.page<total?`<button class="page-btn" data-p="${state.page+1}">→</button>`:''
+  ].join('');
+  pg.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{
+    onPage(parseInt(b.dataset.p));
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+}
+
+// ===== 热门 =====
+function getExtraFilters(state){
+  const extra={};
+  if(state.year)extra.air_date=['>='+state.year+'-01-01','<='+state.year+'-12-31'];
+  // Bangumi 不支持 airing 布尔，通过 nsfw 字段近似筛选（实际用 meta_filter）
+  return extra;
+}
+async function loadHot(){
+  document.getElementById('hotGrid').innerHTML=skeletonGrid(6);
+  document.getElementById('hotPagination').innerHTML='';
+  const offset=(hotState.page-1)*PAGE;
+  const extra=getExtraFilters(hotState);
+  try{
+    let data;
+    if(hotState.search)data=await fetchSearch(hotState.search,offset,extra);
+    else if(hotState.tag)data=await fetchTag(hotState.tag,offset,extra);
+    else data=await fetchHot(offset,extra);
+    const items=data.data||data.list||[];
+    hotState.total=data.total||items.length;
+    document.getElementById('hotCount').textContent=`共 ${hotState.total} 部`;
+    let ht=hotState.search?`"${hotState.search}"`:hotState.tag?`${hotState.tag} 番剧`:'综合热门番剧';
+    if(hotState.year)ht+=` · ${hotState.year}年`;
+    document.getElementById('hotTitle').textContent=ht;
+    const g=document.getElementById('hotGrid');
+    if(!items.length){g.innerHTML=mascotEmpty('没有找到相关动漫…<br/>换个关键词试试？','sad');return;}
+    g.innerHTML=items.map(a=>cardHtml(a)).join('');
+    bindCards(g,items);
+    renderPagination('hotPagination',hotState,p=>{hotState.page=p;loadHot();});
+  }catch(e){
+    document.getElementById('hotGrid').innerHTML=mascotEmpty('网络开小差了…<br/>刷新再试一次！','sad');
+  }
+}
+
+// ===== 排行 =====
+async function loadRanking(){
+  document.getElementById('rankGrid').innerHTML=skeletonGrid(6);
+  document.getElementById('rankPagination').innerHTML='';
+  const offset=(rankState.page-1)*PAGE;
+  try{
+    const extra=getExtraFilters(rankState);
+    const data=await fetchRanking(offset,extra);
+    const items=data.data||data.list||[];
+    rankState.total=data.total||items.length;
+    document.getElementById('rankCount').textContent=`共 ${rankState.total} 部`;
+    const g=document.getElementById('rankGrid');
+    if(!items.length){g.innerHTML='<div class="message">暂无数据</div>';return;}
+    g.innerHTML=items.map((a,i)=>cardHtml(a,{rank:offset+i+1})).join('');
+    bindCards(g,items);
+    renderPagination('rankPagination',rankState,p=>{rankState.page=p;loadRanking();});
+  }catch(e){
+    document.getElementById('rankGrid').innerHTML='<div class="message">加载失败</div>';
+  }
+}
+
+// ===== 新番 =====
+async function loadSchedule(){
+  const wrap=document.getElementById('scheduleWrap');
+  wrap.innerHTML='<div class="message"><div class="loading-dots"><span></span><span></span><span></span></div></div>';
+  try{
+    const cal=await fetchCalendar();
+    const today=new Date().getDay()||7;
+    const sorted=[...cal].sort((a,b)=>{
+      if(a.weekday.id===today)return -1;
+      if(b.weekday.id===today)return 1;
+      return 0;
+    });
+    wrap.innerHTML=sorted.map(day=>{
+      const isToday=day.weekday.id===today;
+      const items=day.items||[];
+      const itemsHtml=items.length?items.map(a=>cardHtml(a)).join(''):'<div class="message" style="padding:1rem 0;grid-column:1/-1">今天没有新番更新</div>';
+      return`<div class="day-group${isToday?' today-group':''}">
+        <div class="day-header">
+          <span class="day-num">${day.weekday.cn||day.weekday.en}</span>
+          <span class="day-name${isToday?' today':''}">${isToday?'🔥 今日更新 · ':''}${day.weekday.cn||day.weekday.ja}</span>
+          <span class="day-count">${items.length} 部</span>
+        </div>
+        <div class="grid">${itemsHtml}</div>
+      </div>`;
+    }).join('');
+    sorted.forEach((day,di)=>{
+      const groups=wrap.querySelectorAll('.day-group');
+      const grid=groups[di]?.querySelector('.grid');
+      if(grid&&day.items)bindCards(grid,day.items);
+    });
+  }catch(e){
+    wrap.innerHTML='<div class="message">新番日历加载失败</div>';
+  }
+}
+
+// ===== 我的番单 =====
+function renderMyPage(){
+  const tracker=getTracker();
+  const all=Object.values(tracker);
+  const watching=all.filter(e=>e.status==='watching').length;
+  const watched=all.filter(e=>e.status==='watched').length;
+  const wish=all.filter(e=>e.status==='wish').length;
+  document.getElementById('myStats').innerHTML=`
+    <div class="stat-item"><div class="stat-num">${all.length}</div><div class="stat-label">追番总数</div></div>
+    <div class="stat-item"><div class="stat-num c-green">${watching}</div><div class="stat-label">在看</div></div>
+    <div class="stat-item"><div class="stat-num c-blue">${watched}</div><div class="stat-label">看完</div></div>
+    <div class="stat-item"><div class="stat-num c-amber">${wish}</div><div class="stat-label">想看</div></div>
+  `;
+  const filtered=myTab==='all'?all:all.filter(e=>e.status===myTab);
+  const tabNames={all:'全部番单',watching:'在看',wish:'想看',watched:'看完',hold:'搁置',dropped:'放弃'};
+  document.getElementById('myListTitle').textContent=tabNames[myTab]||'全部番单';
+  document.getElementById('myCount').textContent=`${filtered.length} 部`;
+  renderRecs(false);
+  const g=document.getElementById('myGrid');
+  if(!filtered.length){
+    const em={
+      all:'还没有追番记录～<br/>点卡片右上角 ♡ 开始追番！',
+      watching:'当前没有在看的番(´・ω・`)<br/>在详情里标记「在看」吧',
+      wish:'想看列表空空的…<br/>发现好番就点 ♡ 收起来！',
+      watched:'还没有看完过番？<br/>刷完第一部来这里打卡！',
+      hold:'没有搁置的番，真棒！(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧',
+      dropped:'已放弃的番…<br/>也许有缘会再相遇吧',
+    }[myTab]||'暂无内容';
+    g.innerHTML=mascotEmpty(em, myTab==='watching'||myTab==='all'?'excited':'happy');
+    return;
+  }
+  const sorted=[...filtered].sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  g.innerHTML=sorted.map(e=>cardHtml(e.anime,{timeAgo:e.completedAt?timeAgo(e.completedAt):'',userRating:e.rating||0})).join('');
+  bindCards(g,sorted.map(e=>e.anime));
+}
+
+// ===== 抽屉 =====
+function buildTrackSection(anime){
+  const entry=getEntry(anime.id);
+  const btns=['wish','watching','watched','hold','dropped'].map(s=>`
+    <button class="track-btn${entry?.status===s?' tb-active':''}" data-s="${s}">${STATUS_ICONS[s]} ${STATUS_LABELS[s]}</button>
+  `).join('');
+  const showEps=entry?.status==='watching';
+  const prog=entry?.progress||0;
+  const showRating=entry?.status==='watched'||entry?.status==='watching';
+  const userRating=entry?.rating||0;
+  return`<div class="track-section" id="trackSection">
+    <div class="section-label">追番状态</div>
+    <div class="track-btns" id="trackBtns">${btns}</div>
+    <div class="eps-row" id="epsRow" style="${showEps?'':'display:none'}">
+      <span>进度</span>
+      <button class="eps-adj" id="epsMinus">−</button>
+      <span class="eps-num" id="epsNum">${prog}</span>
+      <button class="eps-adj" id="epsPlus">+</button>
+      <span>/ ${anime.eps||'?'} 集</span>
+    </div>
+    <div class="rating-row" id="ratingRow" style="${showRating?'':'display:none'}">
+      <span>我的评分</span>
+      <div class="stars" id="starPicker">${[1,2,3,4,5,6,7,8,9,10].map(i=>`<span class="star${i<=userRating?' active':''}" data-r="${i}">${i<=userRating?'★':'☆'}</span>`).join('')}</div>
+    </div>
+  </div>`;
+}
+
+function wireTrackListeners(anime){
+  document.querySelectorAll('#trackBtns .track-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const s=btn.dataset.s;
+      const current=getEntry(anime.id);
+      if(current?.status===s){
+        setStatus(anime,null);
+        showToast('已移除追番');
+      }else{
+        setStatus(anime,s,current?.progress||0);
+        showToast(`已标记「${STATUS_LABELS[s]}」`);
+      }
+      if(navigator.vibrate)navigator.vibrate(10);
+      refreshTrackUI(anime);
+      updateMyBadge();
+      updateAllCardBtns(anime.id);
+      updateDrawerQuickBtn(anime.id);
+      if(currentView==='my')renderMyPage();
+    });
+  });
+  document.getElementById('epsMinus')?.addEventListener('click',()=>{
+    const e=getEntry(anime.id);
+    if(!e)return;
+    const p=Math.max(0,(e.progress||0)-1);
+    setStatus(anime,e.status,p);
+    document.getElementById('epsNum').textContent=p;
+  });
+  document.getElementById('epsPlus')?.addEventListener('click',()=>{
+    const e=getEntry(anime.id);
+    if(!e)return;
+    const p=(e.progress||0)+1;
+    setStatus(anime,e.status,p);
+    document.getElementById('epsNum').textContent=p;
+  });
+  document.querySelectorAll('#starPicker .star').forEach(s=>{
+    s.addEventListener('click',()=>{
+      const r=parseInt(s.dataset.r);
+      const e=getEntry(anime.id);
+      if(!e)return;
+      setStatus(anime,e.status,e.progress,r);
+      document.querySelectorAll('#starPicker .star').forEach((st,i)=>{
+        st.textContent=i<r?'★':'☆';
+        st.classList.toggle('active',i<r);
+      });
+      showToast(`已打 ${r} 分 ⭐`);
+    });
+  });
+}
+
+function refreshTrackUI(anime){
+  const entry=getEntry(anime.id);
+  document.querySelectorAll('#trackBtns .track-btn').forEach(btn=>{
+    btn.classList.toggle('tb-active',entry?.status===btn.dataset.s);
+  });
+  const epsRow=document.getElementById('epsRow');
+  if(epsRow){
+    epsRow.style.display=entry?.status==='watching'?'flex':'none';
+    document.getElementById('epsNum').textContent=entry?.progress||0;
+  }
+}
+
+function updateDrawerQuickBtn(id){
+  const btn=document.getElementById('drawerTrackQuick');
+  if(!btn)return;
+  const entry=getEntry(id);
+  btn.classList.toggle('status-active',!!entry);
+  btn.innerHTML=entry?(STATUS_ICONS[entry.status]||'♥'):'♡';
+}
+
+async function openDrawer(a){
+  currentDetailAnime=a;
+  const bg=document.getElementById('drawerBg');
+  const body=document.getElementById('drawerBody');
+  document.getElementById('drawerHeadTitle').textContent=a.name_cn||a.name;
+  updateDrawerQuickBtn(a.id);
+  body.innerHTML='<div class="message"><div class="loading-dots"><span></span><span></span><span></span></div></div>';
+  bg.classList.add('open');
+  document.body.style.overflow='hidden';
+  try{
+    const d=await fetchDetail(a.id);
+    currentDetailAnime=d;
+    const img=(d.images?.large||d.images?.common||'').replace(/^http:/,'https:');
+    const title=d.name_cn||d.name;
+    const sub=[d.name,d.date?d.date.slice(0,4)+'年':'',d.eps?`共${d.eps}集`:''].filter(Boolean).join(' · ');
+    const tags=(d.tags||[]).slice(0,8).map(t=>`<span class="drawer-tag">${t.name}</span>`).join('');
+    const desc=d.summary?d.summary.trim():'暂无简介';
+    const longDesc=desc.length>120;
+    let ratingHtml='';
+    const r=d.rating;
+    if(r&&r.score){
+      const stars=Array.from({length:5},(_,i)=>`<span class="star${i<Math.round(r.score/2)?'':' empty'}">★</span>`).join('');
+      const entries=r.count?Object.entries(r.count).sort((a,b)=>b[0]-a[0]):[];
+      const max=entries.length?Math.max(...entries.map(e=>e[1])):1;
+      const bars=entries.map(([k,v])=>`<div class="bar-row"><span class="bar-label">${k}</span><div class="bar-track"><div class="bar-fill" style="width:${max?Math.round(v/max*100):0}%"></div></div><span class="bar-count">${v}</span></div>`).join('');
+      ratingHtml=`<div class="rating-section"><div class="rating-top"><div class="rating-num">${r.score.toFixed(1)}</div><div><div class="rating-stars">${stars}</div><div class="rating-info">${(r.total||0).toLocaleString()} 人评分${r.rank?` · 排名 #${r.rank}`:''}</div></div></div><div>${bars}</div></div>`;
+    }else{
+      ratingHtml=`<div class="rating-section" style="padding:12px;color:var(--text3);font-size:13px;text-align:center">暂无评分数据</div>`;
+    }
+    const encTitle=encodeURIComponent(title);
+    body.innerHTML=`
+      <img class="drawer-cover" src="${img}" alt=""/>
+      <div class="drawer-title">${title}</div>
+      <div class="drawer-subtitle">${sub}</div>
+      <div class="drawer-tags">${tags}</div>
+      ${buildTrackSection(d)}
+      ${ratingHtml}
+      <div class="desc-section">
+        <div class="section-label">简介</div>
+        <div class="desc-text${longDesc?' collapsed':''}" id="descText">${desc}</div>
+        ${longDesc?'<button class="expand-btn" id="expandBtn">展开全部 ↓</button>':''}
+      </div>
+      <div class="watch-section">
+        <button class="watch-btn primary" onclick="openWatchUrl('https://bgm.tv/subject/${d.id}')">📖 在 Bangumi 查看更多</button>
+        <button class="watch-btn" onclick="openWatchUrl('https://search.bilibili.com/all?keyword=${encTitle}')">🎬 B站</button>
+        <button class="watch-btn" onclick="openWatchUrl('https://www.iqiyi.com/search?key=${encTitle}')">📺 爱奇艺</button>
+        <button class="watch-btn" onclick="openWatchUrl('https://www.youku.com/search_video/q_${encTitle}')">📺 优酷</button>
+        <button class="watch-btn" onclick="openWatchUrl('https://v.qq.com/search.html#stag=0&searchValue=${encTitle}')">📺 腾讯</button>
+      </div>`;
+    wireTrackListeners(d);
+    updateDrawerQuickBtn(d.id);
+    document.getElementById('expandBtn')?.addEventListener('click',()=>{
+      document.getElementById('descText').classList.remove('collapsed');
+      document.getElementById('expandBtn').style.display='none';
+    });
+  }catch(e){
+    body.innerHTML='<div class="message" style="padding:2rem">加载失败</div>';
+  }
+}
+
+// 抽屉快捷按钮（想看 toggle）
+document.getElementById('drawerTrackQuick').addEventListener('click',()=>{
+  if(!currentDetailAnime)return;
+  const id=currentDetailAnime.id;
+  const entry=getEntry(id);
+  if(!entry){
+    setStatus(currentDetailAnime,'wish');
+    showToast('加入想看 🔖');
+  }else if(entry.status==='wish'){
+    setStatus(currentDetailAnime,null);
+    showToast('已移除');
+  }else{
+    showToast(`当前状态「${STATUS_LABELS[entry.status]}」`);
+    return;
+  }
+  if(navigator.vibrate)navigator.vibrate(10);
+  updateDrawerQuickBtn(id);
+  updateAllCardBtns(id);
+  updateMyBadge();
+  if(currentView==='my')renderMyPage();
+  // 如果抽屉内 track section 存在，刷新它
+  if(document.getElementById('trackSection'))refreshTrackUI(currentDetailAnime);
+});
+
+document.getElementById('drawerClose').addEventListener('click',closeDrawer);
+document.getElementById('drawerBg').addEventListener('click',e=>{if(e.target===document.getElementById('drawerBg'))closeDrawer();});
+function closeDrawer(){document.getElementById('drawerBg').classList.remove('open');document.body.style.overflow='';currentDetailAnime=null;}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+
+// ===== 导航 =====
+function switchView(view){
+  currentView=view;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  document.querySelectorAll('.bn-item').forEach(t=>t.classList.toggle('active',t.dataset.view===view));
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(view==='hot'&&!document.getElementById('hotGrid').querySelector('.card'))loadHot();
+  if(view==='ranking'&&!document.getElementById('rankGrid').querySelector('.card'))loadRanking();
+  if(view==='schedule'&&!document.getElementById('scheduleWrap').querySelector('.day-group'))loadSchedule();
+  if(view==='my')renderMyPage();
+  history.replaceState(null,'','#'+view);
+}
+document.querySelectorAll('.bn-item').forEach(t=>t.addEventListener('click',()=>switchView(t.dataset.view)));
+document.getElementById('logoHome').addEventListener('click',()=>switchView('hot'));
+
+// 标签筛选
+document.getElementById('tagFilters').querySelectorAll('.filter-tag').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('#tagFilters .filter-tag').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    hotState.tag=t.dataset.val;
+    hotState.search='';
+    hotState.page=1;
+    document.getElementById('searchInput').value='';
+    loadHot();
+  });
+});
+
+// 年份筛选
+(function initYearFilters(){
+  const now=new Date().getFullYear();
+  const hotSelect=document.getElementById('hotYearSelect');
+  const rankSelect=document.getElementById('rankYearSelect');
+  const options='<option value="">📅 全部年份</option>'+Array.from({length:now-1999},(_,i)=>now-i).map(y=>`<option value="${y}">📅 ${y}年</option>`).join('');
+  hotSelect.innerHTML=options;
+  rankSelect.innerHTML=options;
+  function bindYearFilter(select,airingBtn,state,loadFn){
+    select.addEventListener('change',()=>{
+      state.year=select.value;
+      state.page=1;
+      state.airing=false;
+      airingBtn.classList.remove('active');
+      loadFn();
+    });
+    airingBtn.addEventListener('click',()=>{
+      const active=airingBtn.classList.toggle('active');
+      state.airing=active;
+      state.year='';
+      state.page=1;
+      select.value='';
+      loadFn();
+    });
+  }
+  bindYearFilter(hotSelect,document.getElementById('hotAiringBtn'),hotState,loadHot);
+  bindYearFilter(rankSelect,document.getElementById('rankAiringBtn'),rankState,loadRanking);
+})();
+
+// 搜索
+const doSearch=()=>{
+  const q=document.getElementById('searchInput').value.trim();
+  if(!q)return;
+  hotState.search=q;
+  hotState.tag='';
+  hotState.page=1;
+  document.querySelectorAll('#tagFilters .filter-tag').forEach(x=>x.classList.remove('active'));
+  if(currentView!=='hot')showToast(`正在搜索「${q}」…`);
+  switchView('hot');
+  loadHot();
+};
+document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.target.blur();doSearch();}});
+
+// ===== "我的"页 tabs =====
+document.getElementById('statusTabs').querySelectorAll('.status-tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('#statusTabs .status-tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    myTab=t.dataset.tab;
+    renderMyPage();
+  });
+});
+
+// ===== 导出 / 导入 =====
+function exportData(){
+  const tracker=getTracker();
+  const vals=Object.values(tracker);
+  const data={
+    app:'FanJi',version:'2.0',
+    exportedAt:new Date().toISOString(),
+    tracker,
+    meta:{total:vals.length,watching:vals.filter(e=>e.status==='watching').length,watched:vals.filter(e=>e.status==='watched').length}
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`fanji-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('已导出番单备份 📤');
+}
+
+document.getElementById('exportBtn').addEventListener('click',exportData);
+document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change',e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.tracker||typeof data.tracker!=='object')throw new Error();
+      const current=getTracker();
+      saveTracker({...current,...data.tracker});
+      updateMyBadge();
+      if(currentView==='my')renderMyPage();
+      showToast(`导入成功，共 ${Object.keys(data.tracker).length} 部 📥`);
+    }catch(err){
+      showToast('导入失败：文件格式不正确');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+});
+
+// ===== Toast =====
+let toastTimer;
+function showToast(msg,onUndo){
+  const t=document.getElementById('toast');
+  if(onUndo){
+    t.innerHTML=`${msg} <button class="toast-undo">撤销</button>`;
+    t.querySelector('.toast-undo').addEventListener('click',()=>{
+      onUndo();
+      t.classList.remove('show');
+    });
+  }else{
+    t.textContent=msg;
+  }
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),onUndo?4000:2000);
+}
+
+// ===== 推荐系统 =====
+const REC_MIN_FAVS=3;
+const COMMON_TAGS=new Set(['动画','TV','日本','日本动画','OVA','剧场版','漫画改','小说改','WEB','原创','短片','美国','美国动画','中国','中国动画']);
+let recPool=null;
+let recFavSnapshot='';
+
+function getFavsForRec(){
+  return Object.values(getTracker()).filter(e=>e.status!=='dropped').map(e=>e.anime).filter(Boolean);
+}
+
+function buildProfile(){
+  const favs=getFavsForRec();
+  if(favs.length<REC_MIN_FAVS)return null;
+  const tagCount={};
+  favs.forEach(f=>(f.tags||[]).forEach(t=>{const n=typeof t==='string'?t:t.name;tagCount[n]=(tagCount[n]||0)+1;}));
+  const tagWeights={};
+  Object.entries(tagCount).forEach(([tag,count])=>{
+    let w=count/favs.length;
+    if(COMMON_TAGS.has(tag))w*=0.15;
+    tagWeights[tag]=w;
+  });
+  const scores=favs.map(f=>f.score).filter(Boolean);
+  const avgScore=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:7.5;
+  const years=favs.map(f=>f.date?parseInt(f.date.slice(0,4)):null).filter(Boolean);
+  years.sort((a,b)=>a-b);
+  const medianYear=years.length?years[Math.floor(years.length/2)]:2020;
+  const trackedIds=new Set(Object.keys(getTracker()).map(Number));
+  return{tagWeights,avgScore,medianYear,favoriteIds:trackedIds,favorites:favs,
+    topTags:Object.entries(tagWeights).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>e[0])};
+}
+
+async function gatherCandidates(profile){
+  const seen=new Set();
+  const candidates=[];
+  for(const tag of profile.topTags){
+    try{
+      const data=await fetch(`https://api.bgm.tv/v0/subjects?type=2&tag=${encodeURIComponent(tag)}&limit=20&offset=0&sort=rank`).then(r=>r.json());
+      (data.data||[]).forEach(item=>{
+        if(!seen.has(item.id)&&!profile.favoriteIds.has(item.id)){
+          seen.add(item.id);item._sourceTag=tag;candidates.push(item);
+        }
+      });
+    }catch(e){}
+  }
+  const topFavs=[...profile.favorites].filter(f=>f.score).sort((a,b)=>b.score-a.score).slice(0,2);
+  for(const fav of topFavs){
+    try{
+      const rels=await fetch(`https://api.bgm.tv/v0/subjects/${fav.id}/subjects`).then(r=>r.json());
+      (rels||[]).forEach(rel=>{
+        if(rel.type===2&&!seen.has(rel.id)&&!profile.favoriteIds.has(rel.id)){
+          seen.add(rel.id);
+          candidates.push({id:rel.id,name:rel.name,name_cn:rel.name_cn,images:rel.images,_isRelated:fav.name_cn||fav.name});
+        }
+      });
+    }catch(e){}
+  }
+  return candidates;
+}
+
+function scoreCandidate(c,profile){
+  const candTags=(c.tags||[]).map(t=>typeof t==='string'?t:t.name);
+  let tagMatch=0,totalWeight=0;
+  Object.entries(profile.tagWeights).forEach(([t,w])=>{totalWeight+=w;if(candTags.includes(t))tagMatch+=w;});
+  const tagScore=totalWeight?tagMatch/totalWeight:0;
+  let scoreScore=0;
+  if(c.score){const diff=Math.abs(c.score-profile.avgScore);scoreScore=Math.max(0,1-diff/3);if(c.score<6)scoreScore*=0.2;}
+  else scoreScore=0.3;
+  let relScore=c._isRelated?1:Math.min(candTags.filter(t=>profile.tagWeights[t]).length/4,1);
+  let eraScore=0.5;
+  if(c.date){const y=parseInt(c.date.slice(0,4));eraScore=Math.max(0,1-Math.abs(y-profile.medianYear)/15);}
+  const total=tagScore*0.4+scoreScore*0.25+relScore*0.25+eraScore*0.1;
+  let reason='';
+  if(c._isRelated)reason=`《${c._isRelated}》相关`;
+  else if(tagScore>0.5){const matched=profile.topTags.find(t=>candTags.includes(t));reason=matched?`「${matched}」高分作品`:'多标签匹配';}
+  else if(relScore>0.5)reason='品味相似度高';
+  else if(c.score>=8&&scoreScore>0.6)reason='符合你的高分喜好';
+  else reason='综合推荐';
+  return{...c,_recScore:total,_reason:reason};
+}
+
+async function computeRecs(forceRefresh){
+  const profile=buildProfile();
+  if(!profile)return null;
+  const sig=[...profile.favoriteIds].sort((a,b)=>a-b).join(',');
+  if(!forceRefresh&&recPool&&recFavSnapshot===sig){
+    const shuffled=[...recPool].sort(()=>Math.random()-0.5);
+    return{recs:shuffled.slice(0,12),profile};
+  }
+  const candidates=await gatherCandidates(profile);
+  const scored=candidates.map(c=>scoreCandidate(c,profile)).sort((a,b)=>b._recScore-a._recScore);
+  recPool=scored.slice(0,40);
+  recFavSnapshot=sig;
+  return{recs:recPool.slice(0,12),profile};
+}
+
+function cardWithReason(a){
+  const img=(a.images?.common||a.images?.medium||a.images?.grid||'').replace(/^http:/,'https:');
+  const score=a.score?`★ ${a.score.toFixed(1)}`:'暂无';
+  const cls=a.score?'card-score':'card-score none';
+  const year=a.date?a.date.slice(0,4):'';
+  const tags=(a.tags||[]).slice(0,2).map(t=>`<span class="tag-pill">${typeof t==='string'?t:t.name}</span>`).join('');
+  const{icon,cls:statusCls}=getTrackIcon(a.id);
+  return`<div class="card" data-id="${a.id}">
+    <div class="card-img-wrap">
+      <button class="fav-btn ${statusCls}" data-fid="${a.id}">${icon}</button>
+      <img src="${img}" alt="" loading="lazy"/>
+      <div class="rec-reason">${a._reason}</div>
+    </div>
+    <div class="card-body">
+      <div class="card-title">${a.name_cn||a.name}</div>
+      <div class="card-meta"><span class="${cls}">${score}</span><span class="card-year">${year}</span></div>
+      <div class="card-tags">${tags}</div>
+    </div>
+  </div>`;
+}
+
+async function renderRecs(forceRefresh){
+  const section=document.getElementById('recSection');
+  const grid=document.getElementById('recGrid');
+  const intro=document.getElementById('recIntro');
+  const favs=getFavsForRec();
+  if(favs.length<REC_MIN_FAVS){section.style.display='none';return;}
+  section.style.display='block';
+  intro.textContent='';
+  grid.innerHTML='<div class="rec-loading"><div class="loading-dots"><span></span><span></span><span></span></div><div style="margin-top:8px">分析你的口味中...</div></div>';
+  try{
+    const result=await computeRecs(forceRefresh);
+    if(!result||!result.recs.length){grid.innerHTML='<div class="rec-empty">暂时找不到合适的推荐，多标记几部不同类型试试</div>';return;}
+    const{recs,profile}=result;
+    intro.textContent=`基于你的 ${favs.length} 部追番，主要口味：${profile.topTags.slice(0,3).join('、')}`;
+    grid.innerHTML=recs.map(cardWithReason).join('');
+    bindCards(grid,recs);
+  }catch(e){
+    grid.innerHTML='<div class="rec-empty">推荐加载失败，请稍后再试</div>';
+  }
+}
+
+document.getElementById('recRefresh').addEventListener('click',()=>{
+  if(navigator.vibrate)navigator.vibrate(10);
+  renderRecs(true);
+});
+
+// ===== PWA =====
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      if(reg.active||navigator.serviceWorker.controller){
+        navigator.serviceWorker.controller?.postMessage('trim-cache');
+      }else{
+        reg.addEventListener('updatefound',()=>{
+          reg.installing.addEventListener('statechange',()=>{
+            if(reg.active||navigator.serviceWorker.controller){
+              navigator.serviceWorker.controller?.postMessage('trim-cache');
+            }
+          });
+        });
+      }
+    }).catch(()=>{});
+  });
+}
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  document.getElementById('installBtn').classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click',async()=>{
+  if(!deferredInstallPrompt)return;
+  deferredInstallPrompt.prompt();
+  const{outcome}=await deferredInstallPrompt.userChoice;
+  if(outcome==='accepted'){showToast('安装成功！🎉');document.getElementById('installBtn').classList.remove('show');}
+  deferredInstallPrompt=null;
+});
+function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;}
+function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;}
+if(isIOS()&&!isStandalone()&&!localStorage.getItem(IOS_TIP_KEY)){
+  setTimeout(()=>document.getElementById('iosInstallTip').classList.add('show'),3000);
+}
+document.getElementById('iosTipClose').addEventListener('click',()=>{
+  document.getElementById('iosInstallTip').classList.remove('show');
+  localStorage.setItem(IOS_TIP_KEY,'1');
+});
+
+// ===== 初始化 =====
+migrateFromFavorites();
+updateMyBadge();
+const hash=location.hash.slice(1);
+if(['hot','ranking','schedule','my','favorites'].includes(hash)){
+  switchView(hash==='favorites'?'my':hash);
+}else{
+  switchView('schedule');
+}
+</script>
+</body>
+</html>

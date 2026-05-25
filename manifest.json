@@ -1,0 +1,32 @@
+{
+  "name": "FanJi 番剧探索",
+  "short_name": "FanJi",
+  "description": "FJ · 发现你的下一部好番 - 来自 Bangumi 的真实评分与简介",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080810",
+  "theme_color": "#080810",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["entertainment", "lifestyle"],
+  "shortcuts": [
+    {"name": "排行榜", "short_name": "排行榜", "url": "./index.html#ranking"},
+    {"name": "新番时间表", "short_name": "新番", "url": "./index.html#schedule"},
+    {"name": "我的收藏", "short_name": "收藏", "url": "./index.html#favorites"}
+  ]
+}

@@ -1,0 +1,10 @@
+node_modules/
+.claude/settings.local.json
+www/
+android/
+*.log
+.DS_Store
+Thumbs.db
+screenshot-*.png
+test-*.png
+

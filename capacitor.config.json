@@ -1,0 +1,15 @@
+{
+  "appId": "com.fanji.animefinder",
+  "appName": "FanJi",
+  "webDir": "www",
+  "plugins": {
+    "Browser": {
+      "presentationStyle": "fullscreen"
+    }
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  }
+}

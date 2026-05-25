@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>FanJi 吉祥物方案</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080810;color:#f0f0ff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;padding:2rem 1rem}
+h1{text-align:center;font-size:20px;font-weight:700;margin-bottom:6px;background:linear-gradient(90deg,#a855f7,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sub{text-align:center;font-size:13px;color:#5a5a80;margin-bottom:2.5rem}
+.cards{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
+.card{background:#0f0f1a;border:1px solid rgba(168,85,247,0.2);border-radius:20px;padding:28px 24px;width:260px;display:flex;flex-direction:column;align-items:center;gap:16px;transition:all .3s;cursor:pointer}
+.card:hover{border-color:rgba(168,85,247,0.6);box-shadow:0 0 32px rgba(168,85,247,0.15);transform:translateY(-4px)}
+.card.cyan:hover{border-color:rgba(6,182,212,0.6);box-shadow:0 0 32px rgba(6,182,212,0.15)}
+.card.orange:hover{border-color:rgba(251,146,60,0.6);box-shadow:0 0 32px rgba(251,146,60,0.15)}
+.name{font-size:18px;font-weight:800;letter-spacing:-0.3px}
+.type-tag{font-size:11px;padding:3px 12px;border-radius:99px;background:rgba(168,85,247,0.1);border:0.5px solid rgba(168,85,247,0.3);color:#a855f7}
+.type-tag.cyan{background:rgba(6,182,212,0.1);border-color:rgba(6,182,212,0.3);color:#06b6d4}
+.type-tag.orange{background:rgba(251,146,60,0.1);border-color:rgba(251,146,60,0.3);color:#fb923c}
+.palette{display:flex;gap:6px;margin:4px 0}
+.dot{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.1)}
+.desc{font-size:12px;color:#8888aa;line-height:1.8;text-align:center}
+.refs{font-size:11px;color:#5a5a80;text-align:center}
+.refs span{color:#7a7a9a}
+.vote{margin-top:4px;font-size:12px;padding:8px 24px;border-radius:99px;border:0.5px solid rgba(168,85,247,0.4);background:transparent;color:#a855f7;cursor:pointer;transition:all .25s;font-family:inherit}
+.vote:hover{background:rgba(168,85,247,0.15)}
+.vote.cyan{border-color:rgba(6,182,212,0.4);color:#06b6d4}
+.vote.cyan:hover{background:rgba(6,182,212,0.15)}
+.vote.orange{border-color:rgba(251,146,60,0.4);color:#fb923c}
+.vote.orange:hover{background:rgba(251,146,60,0.15)}
+svg.mascot{filter:drop-shadow(0 6px 20px rgba(0,0,0,0.5))}
+</style>
+</head>
+<body>
+<h1>FanJi 吉祥物 · 三方案</h1>
+<p class="sub">选一个方向，后续用 AI 绘图工具生成正式版</p>
+
+<div class="cards">
+
+  <!-- ===== 方案 A：紫音 ===== -->
+  <div class="card">
+    <div class="name" style="background:linear-gradient(90deg,#a855f7,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">紫音 Shion</div>
+    <div class="type-tag">神秘系 · 符合app主色</div>
+
+    <!-- SVG: 紫青双马尾，大眼睛，冷淡微笑 -->
+    <svg class="mascot" width="150" height="170" viewBox="0 0 150 170" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sa-hair" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#7c3aed"/>
+          <stop offset="100%" stop-color="#06b6d4"/>
+        </linearGradient>
+        <linearGradient id="sa-eye" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#c084fc"/>
+          <stop offset="100%" stop-color="#7c3aed"/>
+        </linearGradient>
+      </defs>
+      <!-- 后发 -->
+      <ellipse cx="75" cy="68" rx="50" ry="55" fill="url(#sa-hair)"/>
+      <!-- 左马尾 -->
+      <path d="M30 90 Q8 115 14 148 Q20 155 30 140 Q22 115 38 100Z" fill="#06b6d4"/>
+      <!-- 右马尾 -->
+      <path d="M120 90 Q142 115 136 148 Q130 155 120 140 Q128 115 112 100Z" fill="#7c3aed"/>
+      <!-- 脸 -->
+      <ellipse cx="75" cy="82" rx="38" ry="40" fill="#fde8d8"/>
+      <!-- 左眼框 -->
+      <ellipse cx="57" cy="80" rx="11" ry="13" fill="white"/>
+      <ellipse cx="57" cy="81" rx="9" ry="11" fill="url(#sa-eye)"/>
+      <ellipse cx="57" cy="81" rx="5" ry="6" fill="#1a0630"/>
+      <ellipse cx="61" cy="76" rx="2.5" ry="2.5" fill="white" opacity="0.95"/>
+      <ellipse cx="54" cy="84" rx="1.2" ry="1.2" fill="white" opacity="0.6"/>
+      <!-- 左睫毛 -->
+      <path d="M46 72 Q57 65 68 72" stroke="#2d1050" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <line x1="46" y1="72" x2="43" y2="68" stroke="#2d1050" stroke-width="2" stroke-linecap="round"/>
+      <line x1="68" y1="72" x2="71" y2="68" stroke="#2d1050" stroke-width="2" stroke-linecap="round"/>
+      <!-- 右眼框 -->
+      <ellipse cx="93" cy="80" rx="11" ry="13" fill="white"/>
+      <ellipse cx="93" cy="81" rx="9" ry="11" fill="url(#sa-eye)"/>
+      <ellipse cx="93" cy="81" rx="5" ry="6" fill="#1a0630"/>
+      <ellipse cx="97" cy="76" rx="2.5" ry="2.5" fill="white" opacity="0.95"/>
+      <ellipse cx="90" cy="84" rx="1.2" ry="1.2" fill="white" opacity="0.6"/>
+      <!-- 右睫毛 -->
+      <path d="M82 72 Q93 65 104 72" stroke="#2d1050" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <line x1="82" y1="72" x2="79" y2="68" stroke="#2d1050" stroke-width="2" stroke-linecap="round"/>
+      <line x1="104" y1="72" x2="107" y2="68" stroke="#2d1050" stroke-width="2" stroke-linecap="round"/>
+      <!-- 腮红 -->
+      <ellipse cx="44" cy="92" rx="9" ry="5" fill="#ffb0b0" opacity="0.32"/>
+      <ellipse cx="106" cy="92" rx="9" ry="5" fill="#ffb0b0" opacity="0.32"/>
+      <!-- 嘴：淡淡微笑 -->
+      <path d="M65 100 Q75 106 85 100" stroke="#d08070" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- 刘海 -->
+      <path d="M28 65 Q36 38 75 34 Q114 38 122 65 Q114 52 104 57 Q96 40 75 40 Q54 40 46 57 Q36 52 28 65Z" fill="#5b21b6"/>
+      <!-- 发带 -->
+      <rect x="40" y="58" width="70" height="8" rx="4" fill="rgba(168,85,247,0.4)" stroke="rgba(168,85,247,0.6)" stroke-width="1"/>
+      <text x="75" y="65" text-anchor="middle" font-size="6" fill="#e9d5ff" font-weight="600">FJ</text>
+      <!-- 身体 -->
+      <path d="M44 148 Q40 132 36 128 Q55 120 75 120 Q95 120 114 128 Q110 132 106 148Z" fill="#5b21b6" opacity="0.7"/>
+      <path d="M50 148 Q55 130 75 128 Q95 130 100 148Z" fill="#e9d5ff" opacity="0.9"/>
+    </svg>
+
+    <div class="palette">
+      <div class="dot" style="background:#7c3aed"></div>
+      <div class="dot" style="background:#a855f7"></div>
+      <div class="dot" style="background:#06b6d4"></div>
+      <div class="dot" style="background:#e9d5ff"></div>
+    </div>
+    <div class="desc">神秘安静，但推番眼光毒辣<br/>一说话就是神作推荐<br/>与app紫青主题完美契合</div>
+    <div class="refs">参考气质：<span>暁美焔 · 间桐樱 · 雪之下雪乃</span></div>
+    <button class="vote" onclick="choose('紫音 Shion')">选这个方向 →</button>
+  </div>
+
+  <!-- ===== 方案 B：橙夏 ===== -->
+  <div class="card orange">
+    <div class="name" style="color:#fb923c">橙夏 Natsu</div>
+    <div class="type-tag orange">元气系 · 亲和力拉满</div>
+
+    <!-- SVG: 橙色双马尾，圆眼，大笑 -->
+    <svg class="mascot" width="150" height="170" viewBox="0 0 150 170" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sb-hair" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#f97316"/>
+          <stop offset="100%" stop-color="#fbbf24"/>
+        </linearGradient>
+        <linearGradient id="sb-eye" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#fbbf24"/>
+          <stop offset="100%" stop-color="#d97706"/>
+        </linearGradient>
+      </defs>
+      <!-- 后发 -->
+      <ellipse cx="75" cy="65" rx="48" ry="52" fill="url(#sb-hair)"/>
+      <!-- 左马尾（蓬松弧形） -->
+      <path d="M28 82 Q4 100 8 138 Q15 148 28 130 Q16 108 36 95Z" fill="#fb923c"/>
+      <path d="M28 82 Q10 92 8 120 Q22 118 30 100Z" fill="#fbbf24" opacity="0.5"/>
+      <!-- 右马尾 -->
+      <path d="M122 82 Q146 100 142 138 Q135 148 122 130 Q134 108 114 95Z" fill="#fb923c"/>
+      <path d="M122 82 Q140 92 142 120 Q128 118 120 100Z" fill="#fbbf24" opacity="0.5"/>
+      <!-- 脸（圆润） -->
+      <ellipse cx="75" cy="84" rx="40" ry="41" fill="#fde8d8"/>
+      <!-- 左眼（大圆眼） -->
+      <ellipse cx="57" cy="82" rx="13" ry="14" fill="white"/>
+      <ellipse cx="57" cy="83" rx="10" ry="11" fill="url(#sb-eye)"/>
+      <ellipse cx="57" cy="83" rx="5.5" ry="6" fill="#1a0800"/>
+      <ellipse cx="62" cy="77" rx="3" ry="3" fill="white" opacity="0.95"/>
+      <ellipse cx="53" cy="87" rx="1.5" ry="1.5" fill="white" opacity="0.5"/>
+      <!-- 右眼 -->
+      <ellipse cx="93" cy="82" rx="13" ry="14" fill="white"/>
+      <ellipse cx="93" cy="83" rx="10" ry="11" fill="url(#sb-eye)"/>
+      <ellipse cx="93" cy="83" rx="5.5" ry="6" fill="#1a0800"/>
+      <ellipse cx="98" cy="77" rx="3" ry="3" fill="white" opacity="0.95"/>
+      <ellipse cx="89" cy="87" rx="1.5" ry="1.5" fill="white" opacity="0.5"/>
+      <!-- 眉毛（弯弯的） -->
+      <path d="M47 68 Q57 62 66 68" stroke="#92400e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M84 68 Q93 62 102 68" stroke="#92400e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- 腮红（重） -->
+      <ellipse cx="41" cy="94" rx="11" ry="6" fill="#ffaaaa" opacity="0.5"/>
+      <ellipse cx="109" cy="94" rx="11" ry="6" fill="#ffaaaa" opacity="0.5"/>
+      <!-- 嘴：大笑 W -->
+      <path d="M60 104 Q68 112 75 107 Q82 112 90 104" stroke="#c97060" stroke-width="2.2" fill="rgba(255,220,210,0.6)" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- 刘海（蓬松短发） -->
+      <path d="M30 62 Q36 35 75 32 Q114 35 120 62 Q112 50 104 55 Q96 38 75 38 Q54 38 46 55 Q38 50 30 62Z" fill="#f97316"/>
+      <!-- 小星星发夹 -->
+      <text x="38" y="52" font-size="14" fill="#fbbf24">✦</text>
+      <text x="104" y="52" font-size="14" fill="#fbbf24">✦</text>
+      <!-- 身体 -->
+      <path d="M44 150 Q40 135 36 130 Q55 122 75 122 Q95 122 114 130 Q110 135 106 150Z" fill="#fb923c" opacity="0.7"/>
+      <path d="M52 150 Q56 134 75 130 Q94 134 98 150Z" fill="#fff7ed" opacity="0.95"/>
+    </svg>
+
+    <div class="palette">
+      <div class="dot" style="background:#f97316"></div>
+      <div class="dot" style="background:#fbbf24"></div>
+      <div class="dot" style="background:#fde8d8"></div>
+      <div class="dot" style="background:#fff7ed"></div>
+    </div>
+    <div class="desc">永远精力满满，见到好番就激动<br/>口头禅是"这部必看！！！"<br/>亲和力极强，适合拉新用户</div>
+    <div class="refs">参考气质：<span>春日望 · 本田透 · 高坂穗乃果</span></div>
+    <button class="vote orange" onclick="choose('橙夏 Natsu')">选这个方向 →</button>
+  </div>
+
+  <!-- ===== 方案 C：凛 ===== -->
+  <div class="card cyan">
+    <div class="name" style="color:#06b6d4">凛 Rin</div>
+    <div class="type-tag cyan">清冷系 · 高冷御姐</div>
+
+    <!-- SVG: 银蓝长发，细眼，冷艳 -->
+    <svg class="mascot" width="150" height="170" viewBox="0 0 150 170" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sc-hair" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#e0f2fe"/>
+          <stop offset="100%" stop-color="#7dd3fc"/>
+        </linearGradient>
+        <linearGradient id="sc-eye" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#7dd3fc"/>
+          <stop offset="100%" stop-color="#0284c7"/>
+        </linearGradient>
+      </defs>
+      <!-- 后发（长直发） -->
+      <ellipse cx="75" cy="60" rx="46" ry="50" fill="url(#sc-hair)"/>
+      <!-- 长发垂下 -->
+      <path d="M30 100 Q24 130 28 165 L40 165 Q36 130 44 105Z" fill="#bae6fd"/>
+      <path d="M120 100 Q126 130 122 165 L110 165 Q114 130 106 105Z" fill="#bae6fd"/>
+      <!-- 脸（稍长） -->
+      <ellipse cx="75" cy="82" rx="37" ry="41" fill="#fde8d8"/>
+      <!-- 眼镜框 -->
+      <rect x="44" y="72" width="24" height="16" rx="5" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="82" y="72" width="24" height="16" rx="5" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="68" y1="80" x2="82" y2="80" stroke="#94a3b8" stroke-width="1.5"/>
+      <!-- 左眼 -->
+      <ellipse cx="56" cy="80" rx="8" ry="6" fill="white"/>
+      <ellipse cx="56" cy="80" rx="6" ry="5" fill="url(#sc-eye)"/>
+      <ellipse cx="56" cy="80" rx="3" ry="3.5" fill="#082040"/>
+      <ellipse cx="59" cy="77" rx="1.8" ry="1.8" fill="white" opacity="0.95"/>
+      <!-- 右眼 -->
+      <ellipse cx="94" cy="80" rx="8" ry="6" fill="white"/>
+      <ellipse cx="94" cy="80" rx="6" ry="5" fill="url(#sc-eye)"/>
+      <ellipse cx="94" cy="80" rx="3" ry="3.5" fill="#082040"/>
+      <ellipse cx="97" cy="77" rx="1.8" ry="1.8" fill="white" opacity="0.95"/>
+      <!-- 眉毛（细平眉） -->
+      <path d="M47 68 Q56 65 65 68" stroke="#4a6580" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M85 68 Q94 65 103 68" stroke="#4a6580" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- 腮红（极淡） -->
+      <ellipse cx="42" cy="92" rx="8" ry="4" fill="#ffb0b0" opacity="0.2"/>
+      <ellipse cx="108" cy="92" rx="8" ry="4" fill="#ffb0b0" opacity="0.2"/>
+      <!-- 嘴：平静微微上扬 -->
+      <path d="M66 103 Q75 107 84 103" stroke="#c08070" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <!-- 刘海（平直） -->
+      <path d="M32 58 Q38 32 75 28 Q112 32 118 58 Q112 45 102 50 Q95 34 75 34 Q55 34 48 50 Q38 45 32 58Z" fill="#bae6fd"/>
+      <!-- 发箍 -->
+      <path d="M40 46 Q75 38 110 46" stroke="#7dd3fc" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <circle cx="75" cy="38" r="4" fill="#06b6d4"/>
+      <!-- 身体 -->
+      <path d="M44 148 Q40 133 36 128 Q55 120 75 120 Q95 120 114 128 Q110 133 106 148Z" fill="#0ea5e9" opacity="0.6"/>
+      <path d="M50 148 Q54 130 75 128 Q96 130 100 148Z" fill="#e0f2fe" opacity="0.9"/>
+    </svg>
+
+    <div class="palette">
+      <div class="dot" style="background:#bae6fd"></div>
+      <div class="dot" style="background:#7dd3fc"></div>
+      <div class="dot" style="background:#06b6d4"></div>
+      <div class="dot" style="background:#082040"></div>
+    </div>
+    <div class="desc">冷静克制，话不多但字字珠玑<br/>推荐的番没有一部是烂作<br/>戴眼镜，知性感拉满</div>
+    <div class="refs">参考气质：<span>雪之下雪乃 · 千反田 · 一色彩羽</span></div>
+    <button class="vote cyan" onclick="choose('凛 Rin')">选这个方向 →</button>
+  </div>
+
+</div>
+
+<div id="result" style="margin-top:2rem;text-align:center;font-size:15px;color:#a855f7;display:none;font-weight:600"></div>
+
+<p style="text-align:center;margin-top:3rem;font-size:12px;color:#3a3a5a">选定后，小c帮你写 AI 绘图提示词，用 NovelAI / 哩布哩布 等工具生成正式版</p>
+
+<script>
+function choose(name){
+  document.querySelectorAll('.vote').forEach(b=>b.textContent='选这个方向 →');
+  event.target.textContent='✓ 已选！';
+  document.getElementById('result').style.display='block';
+  document.getElementById('result').textContent=`你选了「${name}」！告诉小c，接下来生成 AI 提示词`;
+}
+</script>
+</body>
+</html>

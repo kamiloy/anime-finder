@@ -1,0 +1,23 @@
+{
+  "name": "fanji-anime-finder",
+  "version": "1.0.0",
+  "description": "FanJi 番剧探索 - 动漫发现 App",
+  "scripts": {
+    "sync": "powershell -Command \"Copy-Item index.html,manifest.json,sw.js -Destination www -Force; Copy-Item *.png -Destination www -Force\" && npx cap sync android",
+    "open:android": "npx cap open android",
+    "build": "npm run sync && npx cap open android"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/browser": "^8.0.3",
+    "@capacitor/core": "^8.3.4",
+    "jimp": "^1.6.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.3.4",
+    "playwright": "^1.60.0"
+  }
+}

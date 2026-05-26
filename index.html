@@ -257,7 +257,8 @@ body::after{content:'';position:fixed;bottom:-20%;right:-10%;width:50%;height:50
 
 /* ===== 吉祥物 + 气泡 ===== */
 .mascot-block{display:flex;flex-direction:column;align-items:center;gap:10px;padding:2rem 1rem;grid-column:1/-1}
-.mascot-svg{width:110px;height:120px;filter:drop-shadow(0 0 18px rgba(168,85,247,0.35))}
+.mascot-img{width:132px;height:auto;border-radius:16px;border:1px solid rgba(168,85,247,0.4);box-shadow:0 10px 30px rgba(168,85,247,0.32);animation:mascotFloat 4s ease-in-out infinite}
+@keyframes mascotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .speech-bubble{background:var(--bg3);border:0.5px solid rgba(168,85,247,0.3);border-radius:16px;border-bottom-left-radius:4px;padding:10px 16px;font-size:13px;color:var(--text2);line-height:1.6;text-align:center;max-width:220px;position:relative}
 .speech-bubble::before{content:'';position:absolute;bottom:100%;left:28px;border:8px solid transparent;border-bottom-color:rgba(168,85,247,0.3)}
 .speech-bubble::after{content:'';position:absolute;bottom:100%;left:29.5px;border:7px solid transparent;border-bottom-color:var(--bg3)}
@@ -445,69 +446,9 @@ body::after{content:'';position:fixed;bottom:-20%;right:-10%;width:50%;height:50
 <input type="file" id="importFile" accept=".json" style="display:none"/>
 
 <script>
-// ===== 吉祥物：紫音（番ちゃん）=====
-// 特征：紫青渐变双马尾、▶ 发夹、大眼睛、播放键发饰
-function mascotSVG(mood='happy'){
-  const mouth={
-    happy:'M42 66 Q50 72 58 66',
-    sad:'M42 70 Q50 65 58 70',
-    excited:'M43 65 Q50 73 57 65',
-  }[mood]||'M42 66 Q50 72 58 66';
-  return`<svg class="mascot-svg" viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="mg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient>
-    <linearGradient id="mg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient>
-    <linearGradient id="mg3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#0891b2"/></linearGradient>
-  </defs>
-  <!-- 后层发型 -->
-  <ellipse cx="50" cy="44" rx="33" ry="35" fill="url(#mg1)"/>
-  <!-- 左马尾 -->
-  <path d="M21 57 Q6 72 10 94 Q15 100 22 88 Q17 72 29 62Z" fill="url(#mg1)"/>
-  <!-- 右马尾 -->
-  <path d="M79 57 Q94 72 90 94 Q85 100 78 88 Q83 72 71 62Z" fill="url(#mg3)"/>
-  <!-- 脸 -->
-  <ellipse cx="50" cy="55" rx="26" ry="27" fill="#fde8d8"/>
-  <!-- 左眼白 -->
-  <ellipse cx="37" cy="52" rx="8" ry="9" fill="white"/>
-  <!-- 左虹膜 -->
-  <ellipse cx="37" cy="53" rx="6" ry="7" fill="url(#mg2)"/>
-  <!-- 左瞳孔 -->
-  <ellipse cx="37" cy="53" rx="3.5" ry="4" fill="#150a28"/>
-  <!-- 左高光 -->
-  <ellipse cx="39.5" cy="50" rx="1.8" ry="1.8" fill="white" opacity="0.95"/>
-  <ellipse cx="35.5" cy="55" rx="0.9" ry="0.9" fill="white" opacity="0.6"/>
-  <!-- 左上睫毛 -->
-  <path d="M29 47 Q37 42 45 47" stroke="#2d1b4e" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-  <!-- 右眼白 -->
-  <ellipse cx="63" cy="52" rx="8" ry="9" fill="white"/>
-  <!-- 右虹膜 -->
-  <ellipse cx="63" cy="53" rx="6" ry="7" fill="url(#mg2)"/>
-  <!-- 右瞳孔 -->
-  <ellipse cx="63" cy="53" rx="3.5" ry="4" fill="#150a28"/>
-  <!-- 右高光 -->
-  <ellipse cx="65.5" cy="50" rx="1.8" ry="1.8" fill="white" opacity="0.95"/>
-  <ellipse cx="61.5" cy="55" rx="0.9" ry="0.9" fill="white" opacity="0.6"/>
-  <!-- 右上睫毛 -->
-  <path d="M55 47 Q63 42 71 47" stroke="#2d1b4e" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-  <!-- 鼻子 -->
-  <circle cx="50" cy="61" r="1.2" fill="#e09080" opacity="0.55"/>
-  <!-- 嘴 -->
-  <path d="${mouth}" stroke="#c97060" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-  <!-- 腮红 -->
-  <ellipse cx="31" cy="62" rx="6.5" ry="3.5" fill="#ffaaaa" opacity="0.38"/>
-  <ellipse cx="69" cy="62" rx="6.5" ry="3.5" fill="#ffaaaa" opacity="0.38"/>
-  <!-- 前刘海 -->
-  <path d="M20 40 Q28 18 50 16 Q72 18 80 40 Q73 30 66 35 Q59 23 50 24 Q41 23 34 35 Q27 30 20 40Z" fill="url(#mg1)"/>
-  <!-- 左发夹：▶ 紫色 -->
-  <circle cx="27" cy="27" r="7.5" fill="rgba(168,85,247,0.25)" stroke="#a855f7" stroke-width="1.2"/>
-  <polygon points="24,24 24,30 30,27" fill="#a855f7"/>
-  <!-- 右发夹：▶ 青色 -->
-  <circle cx="73" cy="27" r="7.5" fill="rgba(6,182,212,0.25)" stroke="#06b6d4" stroke-width="1.2"/>
-  <polygon points="70,24 70,30 76,27" fill="#06b6d4"/>
-  <!-- 身体剪影（胸部以上） -->
-  <path d="M32 100 Q30 88 26 85 Q38 80 50 80 Q62 80 74 85 Q70 88 68 100Z" fill="url(#mg1)" opacity="0.6"/>
-  <path d="M36 100 Q38 88 50 86 Q62 88 64 100Z" fill="#e8d0f8" opacity="0.8"/>
-</svg>`;
+// ===== 吉祥物：紫音 Shion（哥特萝莉定稿立绘）=====
+function mascotImg(){
+  return`<img class="mascot-img" src="shion-mascot.jpg" alt="紫音 Shion" width="132" height="193" loading="lazy" decoding="async"/>`;
 }
 
 // 骨架屏 HTML
@@ -517,8 +458,8 @@ function skeletonGrid(n=6){
 }
 
 // 吉祥物空状态
-function mascotEmpty(text,mood='happy'){
-  return`<div class="mascot-block">${mascotSVG(mood)}<div class="speech-bubble">${text}</div></div>`;
+function mascotEmpty(text){
+  return`<div class="mascot-block">${mascotImg()}<div class="speech-bubble">${text}</div></div>`;
 }
 
 async function openWatchUrl(url){
@@ -762,12 +703,12 @@ async function loadHot(){
     if(hotState.year)ht+=` · ${hotState.year}年`;
     document.getElementById('hotTitle').textContent=ht;
     const g=document.getElementById('hotGrid');
-    if(!items.length){g.innerHTML=mascotEmpty('没有找到相关动漫…<br/>换个关键词试试？','sad');return;}
+    if(!items.length){g.innerHTML=mascotEmpty('没有找到相关动漫…<br/>换个关键词试试？');return;}
     g.innerHTML=items.map(a=>cardHtml(a)).join('');
     bindCards(g,items);
     renderPagination('hotPagination',hotState,p=>{hotState.page=p;loadHot();});
   }catch(e){
-    document.getElementById('hotGrid').innerHTML=mascotEmpty('网络开小差了…<br/>刷新再试一次！','sad');
+    document.getElementById('hotGrid').innerHTML=mascotEmpty('网络开小差了…<br/>刷新再试一次！');
   }
 }
 
@@ -855,7 +796,7 @@ function renderMyPage(){
       hold:'没有搁置的番，真棒！(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧',
       dropped:'已放弃的番…<br/>也许有缘会再相遇吧',
     }[myTab]||'暂无内容';
-    g.innerHTML=mascotEmpty(em, myTab==='watching'||myTab==='all'?'excited':'happy');
+    g.innerHTML=mascotEmpty(em);
     return;
   }
   const sorted=[...filtered].sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));

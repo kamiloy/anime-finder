@@ -1,17 +1,22 @@
 # FanJi · 番剧探索
 
-## Memory System
-IMPORTANT: At the START of every session, read ALL files in the memory directory to restore full context:
+## Memory System — MANDATORY FIRST ACTION
 
+**CRITICAL: Before responding to ANY message in a new session, you MUST load memory first. No exceptions.**
+
+This applies even if the user's first message is short, casual, or unrelated to the project. Load memory before doing anything else.
+
+Memory directory:
 ```
 C:\Users\阿杰\.claude\projects\D--anime-anime-finder\memory\
 ```
 
-Steps:
+Required steps (execute immediately, before responding):
 1. Read `MEMORY.md` for the index
-2. Read every `.md` file listed in MEMORY.md to restore full project context
-3. Save new information to memory throughout the session
-4. Update MEMORY.md index when new memory files are added
+2. Read **every** `.md` file listed in MEMORY.md
+3. Only after reading all files, respond to the user
+
+Save new information to memory throughout the session. Update MEMORY.md index when new memory files are added.
 
 ## Project Summary
 FanJi is a solo-developed anime discovery PWA with Capacitor Android wrapping. Single HTML/CSS/JS file architecture, Bangumi API data source, localStorage for user data. No backend, no build step.

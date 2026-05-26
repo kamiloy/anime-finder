@@ -203,6 +203,42 @@ body::after{content:'';position:fixed;bottom:-20%;right:-10%;width:50%;height:50
 .watch-btn:active{background:var(--bg4);transform:scale(0.97)}
 .watch-btn.primary{background:var(--accent-glow);border-color:var(--accent);color:var(--accent);grid-column:1/-1;font-weight:500;padding:12px}
 
+/* 角色 & 声优区块 */
+.char-section{margin-bottom:14px}
+.char-section .section-label{margin-bottom:10px}
+.char-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.char-scroll::-webkit-scrollbar{display:none}
+.char-card{flex:0 0 auto;width:88px}
+.char-thumb{position:relative;width:88px;height:88px;border-radius:var(--radius);overflow:hidden;background:var(--bg3)}
+.char-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.char-relation{position:absolute;top:4px;left:4px;font-size:9px;font-weight:600;padding:2px 6px;border-radius:99px;background:rgba(0,0,0,0.6);color:#fff;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.char-relation.main{background:var(--accent);color:#fff}
+.char-name{font-size:11px;color:var(--text);margin-top:5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.char-va{display:flex;align-items:center;gap:4px;margin-top:4px;padding:3px 6px;border-radius:99px;background:var(--secondary-glow);border:0.5px solid var(--neon-secondary);cursor:pointer;transition:all var(--transition)}
+.char-va:active{transform:scale(0.94)}
+.char-va img{width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--bg4)}
+.char-va span{font-size:10px;color:var(--secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.char-empty{font-size:12px;color:var(--text3);text-align:center;padding:10px 0}
+
+/* 声优作品串联浮层 */
+#personBg{z-index:210}
+#personBg .drawer{z-index:211}
+.person-hero{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.person-avatar{width:76px;height:76px;border-radius:50%;object-fit:cover;background:var(--bg3);flex-shrink:0;border:1.5px solid var(--accent-border-strong)}
+.person-name{font-size:18px;font-weight:600;line-height:1.3}
+.person-meta{font-size:12px;color:var(--secondary);margin-top:4px}
+.person-count{font-size:12px;color:var(--text3);margin-top:2px}
+.works-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.work-card{cursor:pointer;transition:transform var(--transition)}
+.work-card:active{transform:scale(0.96)}
+.work-cover{position:relative;width:100%;aspect-ratio:3/4;border-radius:var(--radius);overflow:hidden;background:var(--bg3)}
+.work-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.work-lock{position:absolute;top:5px;right:5px;font-size:9px;padding:2px 6px;border-radius:99px;background:rgba(0,0,0,0.65);color:#fff;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.work-staff{position:absolute;bottom:0;left:0;right:0;font-size:9px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,0.8));padding:10px 6px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.work-title{font-size:11px;color:var(--text2);margin-top:5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.work-char{font-size:10px;color:var(--text3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.work-card.locked .work-cover img{opacity:0.6}
+
 /* 追番状态选择器（抽屉内） */
 .track-section{background:var(--bg3);border-radius:var(--radius-lg);padding:12px 14px;margin-bottom:14px}
 .track-section .section-label{margin-bottom:10px}
@@ -459,6 +495,22 @@ body::after{content:'';position:fixed;bottom:-20%;right:-10%;width:50%;height:50
       <button class="share-act-btn primary" id="shareSendBtn">📤 分享</button>
     </div>
     <button class="share-close" id="shareClose">关闭</button>
+  </div>
+</div>
+
+<!-- 声优作品串联浮层 -->
+<div class="drawer-bg" id="personBg">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-header">
+      <span style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" id="personHeadTitle">声优</span>
+      <div class="drawer-actions">
+        <button class="drawer-icon-btn" id="personClose">✕</button>
+      </div>
+    </div>
+    <div class="drawer-body" id="personBody">
+      <div class="message"><div class="loading-dots"><span></span><span></span><span></span></div></div>
+    </div>
   </div>
 </div>
 
@@ -836,13 +888,156 @@ let deferredInstallPrompt=null;
 let myTab='all';
 
 // ===== API =====
-const makeFilter=(extra={})=>{const f={type:[2],...extra};return JSON.stringify(f);};
-const fetchHot=(o,extra)=>fetch(`https://api.bgm.tv/v0/search/subjects?limit=${PAGE}&offset=${o}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:'',sort:'heat',filter:{type:[2],...extra}})}).then(r=>r.json());
-const fetchTag=(t,o,extra)=>fetch(`https://api.bgm.tv/v0/search/subjects?limit=${PAGE}&offset=${o}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:'',sort:'heat',filter:{type:[2],tag:[t],...extra}})}).then(r=>r.json());
-const fetchSearch=(q,o,extra)=>fetch(`https://api.bgm.tv/v0/search/subjects?limit=${PAGE}&offset=${o}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:q,filter:{type:[2],...extra}})}).then(r=>r.json());
-const fetchRanking=(o,extra)=>fetch(`https://api.bgm.tv/v0/search/subjects?limit=${PAGE}&offset=${o}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:'',sort:'rank',filter:{type:[2],...extra}})}).then(r=>r.json());
-const fetchCalendar=()=>fetch('https://api.bgm.tv/calendar').then(r=>r.json());
-const fetchDetail=id=>fetch(`https://api.bgm.tv/v0/subjects/${id}`).then(r=>r.json());
+let USE_WORKER_API=true;
+const API_BASE='https://fanji-api.pages.dev';
+const BGM_BASE='https://api.bgm.tv';
+
+function apiFetch(path,opts={}){
+  const url=API_BASE+path;
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),10000);
+  const p=opts.params?fetch(url+(url.includes('?')?'&':'?')+new URLSearchParams(opts.params).toString(),{signal:ctrl.signal})
+    :opts.body?fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(opts.body),signal:ctrl.signal})
+    :fetch(url,{signal:ctrl.signal});
+  return p.then(r=>r.json()).finally(()=>clearTimeout(timer));
+}
+
+function killWorker(){USE_WORKER_API=false;}
+
+function getExtraFilters(state){
+  const extra={};
+  if(state.year)extra.air_date=['>='+state.year+'-01-01','<='+state.year+'-12-31'];
+  return extra;
+}
+
+async function fetchHot(o,extra){
+  if(USE_WORKER_API&&!(extra||{}).air_date){
+    try{
+      const p={sort:'heat',page:Math.floor(o/PAGE)+1,limit:PAGE};
+      const d=await apiFetch('/api/anime',{params:p});
+      return {data:d.data||[],total:d.total||0};
+    }catch(e){killWorker();}
+  }
+  return fetchHotLegacy(o,extra);
+}
+function fetchHotLegacy(o,extra){
+  return fetch(BGM_BASE+'/v0/search/subjects?limit='+PAGE+'&offset='+o,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:'',sort:'heat',filter:{type:[2],...extra}})}).then(r=>r.json());
+}
+
+async function fetchTag(t,o,extra){
+  if(USE_WORKER_API){
+    try{
+      const p={sort:'heat',tag:t,page:Math.floor(o/PAGE)+1,limit:PAGE};
+      const d=await apiFetch('/api/anime',{params:p});
+      return {data:d.data||[],total:d.total||0};
+    }catch(e){killWorker();}
+  }
+  return fetch(BGM_BASE+'/v0/search/subjects?limit='+PAGE+'&offset='+o,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:'',sort:'heat',filter:{type:[2],tag:[t],...extra}})}).then(r=>r.json());
+}
+
+async function fetchSearch(q,o,extra){
+  if(USE_WORKER_API){
+    try{
+      const p={q,page:Math.floor(o/PAGE)+1,limit:PAGE};
+      const d=await apiFetch('/api/anime/search',{params:p});
+      return {data:d.data||[],total:d.total||0};
+    }catch(e){killWorker();}
+  }
+  return fetch(BGM_BASE+'/v0/search/subjects?limit='+PAGE+'&offset='+o,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:q,filter:{type:[2],...extra}})}).then(r=>r.json());
+}
+
+async function fetchRanking(o,extra){
+  if(USE_WORKER_API&&!(extra||{}).air_date){
+    try{
+      const p={sort:'rank',page:Math.floor(o/PAGE)+1,limit:PAGE};
+      const d=await apiFetch('/api/anime',{params:p});
+      return {data:d.data||[],total:d.total||0};
+    }catch(e){killWorker();}
+  }
+  return fetchRankingLegacy(o,extra);
+}
+function fetchRankingLegacy(o,extra){
+  return fetch(BGM_BASE+'/v0/search/subjects?limit='+PAGE+'&offset='+o,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keyword:'',sort:'rank',filter:{type:[2],...extra}})}).then(r=>r.json());
+}
+
+async function fetchCalendar(){
+  if(USE_WORKER_API){
+    try{
+      const d=await apiFetch('/api/calendar');
+      const weekNames=[{id:1,cn:'星期一',en:'Monday',ja:'月曜日'},{id:2,cn:'星期二',en:'Tuesday',ja:'火曜日'},{id:3,cn:'星期三',en:'Wednesday',ja:'水曜日'},{id:4,cn:'星期四',en:'Thursday',ja:'木曜日'},{id:5,cn:'星期五',en:'Friday',ja:'金曜日'},{id:6,cn:'星期六',en:'Saturday',ja:'土曜日'},{id:7,cn:'星期日',en:'Sunday',ja:'日曜日'}];
+      return weekNames.map((w,i)=>({weekday:w,items:d.data[i]||[]}));
+    }catch(e){killWorker();}
+  }
+  return fetch(BGM_BASE+'/calendar').then(r=>r.json());
+}
+
+const fetchDetail=async id=>{
+  if(USE_WORKER_API){
+    try{const d=await apiFetch('/api/anime/'+id);return d.data||d;}
+    catch(e){killWorker();}
+  }
+  return fetch(BGM_BASE+'/v0/subjects/'+id).then(r=>r.json());
+};
+
+async function fetchTagSubjects(tag){
+  if(USE_WORKER_API){
+    try{
+      const d=await apiFetch('/api/anime',{params:{tag,limit:20,sort:'rank'}});
+      return {data:d.data||[]};
+    }catch(e){killWorker();}
+  }
+  return fetch(BGM_BASE+'/v0/subjects?type=2&tag='+encodeURIComponent(tag)+'&limit=20&offset=0&sort=rank').then(r=>r.json());
+}
+async function fetchRelated(id){
+  if(USE_WORKER_API){
+    try{const d=await apiFetch('/api/anime/'+id+'/related');return d.data||[];}
+    catch(e){killWorker();}
+  }
+  return fetch(BGM_BASE+'/v0/subjects/'+id+'/subjects').then(r=>r.json());
+}
+async function fetchCharacters(id){
+  if(USE_WORKER_API){
+    try{const d=await apiFetch('/api/anime/'+id+'/characters');return d.data||[];}
+    catch(e){/* 角色失败不杀 worker，仅本功能降级 */}
+  }
+  // fallback：直连 Bangumi（仅 fallback 模式下 id 才是 bangumi id）
+  try{
+    const raw=await fetch(BGM_BASE+'/v0/subjects/'+id+'/characters').then(r=>r.json());
+    return (Array.isArray(raw)?raw:[]).map(c=>({
+      id:c.id,name:c.name||'',relation:c.relation||'',
+      image:((c.images||{}).medium||(c.images||{}).grid||'').replace(/^http:/,'https:'),
+      actors:(c.actors||[]).map(a=>({id:a.id,name:a.name||'',image:((a.images||{}).medium||(a.images||{}).grid||'').replace(/^http:/,'https:')}))
+    }));
+  }catch(e){return [];}
+}
+async function fetchPerson(personId){
+  if(USE_WORKER_API){
+    try{const d=await apiFetch('/api/person/'+personId);if(d.ok!==false)return d.data||null;}
+    catch(e){/* 同上，仅本功能降级 */}
+  }
+  try{
+    const [p,chars]=await Promise.all([
+      fetch(BGM_BASE+'/v0/persons/'+personId).then(r=>r.json()),
+      fetch(BGM_BASE+'/v0/persons/'+personId+'/characters').then(r=>r.json())
+    ]);
+    const seen=new Set(),works=[];
+    for(const c of (Array.isArray(chars)?chars:[])){
+      if(c.subject_type!==2||!c.subject_id||seen.has(c.subject_id))continue;
+      seen.add(c.subject_id);
+      works.push({
+        bangumi_id:c.subject_id,name:c.subject_name||'',name_cn:c.subject_name_cn||'',
+        char_name:c.name||'',relation:c.staff||'',app_id:null,score:0,
+        image:((c.images||{}).medium||(c.images||{}).grid||'').replace(/^http:/,'https:')
+      });
+    }
+    return {
+      id:p.id,name:p.name||'',
+      image:((p.images||{}).medium||(p.images||{}).grid||'').replace(/^http:/,'https:'),
+      career:Array.isArray(p.career)?p.career.join(' / '):'',
+      works:works.slice(0,48)
+    };
+  }catch(e){return null;}
+}
 
 // ===== 追番状态系统 =====
 function getTracker(){try{return JSON.parse(localStorage.getItem(TRACKER_KEY)||'{}')}catch(e){return{}}}
@@ -867,7 +1062,7 @@ function setStatus(anime,status,progress,rating){
       addedAt:existing?.addedAt||Date.now(),
       updatedAt:Date.now(),
       completedAt:isWatched?(existing?.completedAt||Date.now()):(wasWatched?null:existing?.completedAt),
-      anime:{id:anime.id,name:anime.name,name_cn:anime.name_cn,images:anime.images,score:anime.score,date:anime.date,tags:anime.tags,eps:anime.eps}
+      anime:{id:anime.id,name:anime.name,name_cn:anime.name_cn,images:anime.images,score:anime.rating?.score||anime.score,date:anime.date,tags:anime.tags,eps:anime.eps}
     };
   }
   saveTracker(t);
@@ -884,7 +1079,7 @@ function migrateFromFavorites(){
     const newT={};
     favs.forEach(a=>{
       newT[a.id]={status:'wish',progress:0,addedAt:Date.now(),updatedAt:Date.now(),
-        anime:{id:a.id,name:a.name,name_cn:a.name_cn,images:a.images,score:a.score,date:a.date,tags:a.tags}};
+        anime:{id:a.id,name:a.name,name_cn:a.name_cn,images:a.images,score:a.rating?.score||a.score,date:a.date,tags:a.tags}};
     });
     saveTracker(newT);
     showToast(`已迁移 ${favs.length} 部收藏到番单 ✨`);
@@ -927,8 +1122,9 @@ function timeAgo(ts){
 }
 function cardHtml(a,opts={}){
   const img=(a.images?.common||a.images?.medium||a.images?.grid||'').replace(/^http:/,'https:');
-  const score=a.score?`★ ${a.score.toFixed(1)}`:'暂无';
-  const cls=a.score?'card-score':'card-score none';
+  const s=a.rating?.score||a.score;
+  const score=s?`★ ${s.toFixed(1)}`:'暂无';
+  const cls=s?'card-score':'card-score none';
   const year=a.date?a.date.slice(0,4):'';
   const tags=(a.tags||[]).slice(0,2).map(t=>`<span class="tag-pill">${typeof t==='string'?t:t.name}</span>`).join('');
   const{icon,cls:statusCls}=getTrackIcon(a.id);
@@ -1028,12 +1224,6 @@ function renderPagination(containerId,state,onPage){
 }
 
 // ===== 热门 =====
-function getExtraFilters(state){
-  const extra={};
-  if(state.year)extra.air_date=['>='+state.year+'-01-01','<='+state.year+'-12-31'];
-  // Bangumi 不支持 airing 布尔，通过 nsfw 字段近似筛选（实际用 meta_filter）
-  return extra;
-}
 async function loadHot(){
   document.getElementById('hotGrid').innerHTML=skeletonGrid(6);
   document.getElementById('hotPagination').innerHTML='';
@@ -1285,6 +1475,7 @@ async function openDrawer(a){
       <div class="drawer-tags">${tags}</div>
       ${buildTrackSection(d)}
       ${ratingHtml}
+      <div class="char-section" id="charSection" style="display:none"></div>
       <button class="share-card-btn" id="shareCardBtn">📤 生成分享卡片</button>
       <div class="desc-section">
         <div class="section-label">简介</div>
@@ -1300,6 +1491,7 @@ async function openDrawer(a){
       </div>`;
     wireTrackListeners(d);
     updateDrawerQuickBtn(d.id);
+    loadCharacters(d.id);
     document.getElementById('shareCardBtn')?.addEventListener('click',()=>openShareCard(d));
     document.getElementById('expandBtn')?.addEventListener('click',()=>{
       document.getElementById('descText').classList.remove('collapsed');
@@ -1337,7 +1529,84 @@ document.getElementById('drawerTrackQuick').addEventListener('click',()=>{
 document.getElementById('drawerClose').addEventListener('click',closeDrawer);
 document.getElementById('drawerBg').addEventListener('click',e=>{if(e.target===document.getElementById('drawerBg'))closeDrawer();});
 function closeDrawer(){document.getElementById('drawerBg').classList.remove('open');document.body.style.overflow='';currentDetailAnime=null;}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeShareCard();closeDrawer();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(document.getElementById('personBg').classList.contains('open')){closePerson();return;}closeShareCard();closeDrawer();}});
+
+// ===== 角色 & 声优 =====
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function loadCharacters(id){
+  const sec=document.getElementById('charSection');
+  if(!sec)return;
+  let list=[];
+  try{list=await fetchCharacters(id);}catch(e){list=[];}
+  // 抽屉可能已被关闭或切换到别的番
+  const cur=document.getElementById('charSection');
+  if(!cur||cur!==sec)return;
+  if(!list||!list.length){sec.style.display='none';return;}
+  const cards=list.slice(0,30).map(c=>{
+    const va=c.actors&&c.actors[0];
+    const isMain=c.relation==='主角';
+    return `<div class="char-card">
+      <div class="char-thumb">
+        ${c.image?`<img src="${esc(c.image)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`:''}
+        ${c.relation?`<span class="char-relation${isMain?' main':''}">${esc(c.relation)}</span>`:''}
+      </div>
+      <div class="char-name">${esc(c.name)}</div>
+      ${va?`<div class="char-va" data-person="${esc(va.id)}">${va.image?`<img src="${esc(va.image)}" alt="" onerror="this.style.display='none'"/>`:''}<span>${esc(va.name)}</span></div>`:''}
+    </div>`;
+  }).join('');
+  sec.innerHTML=`<div class="section-label">角色 &amp; 声优</div><div class="char-scroll">${cards}</div>`;
+  sec.style.display='block';
+  sec.querySelectorAll('.char-va').forEach(el=>el.addEventListener('click',()=>openPerson(el.dataset.person)));
+}
+
+async function openPerson(personId){
+  if(!personId)return;
+  const bg=document.getElementById('personBg');
+  const body=document.getElementById('personBody');
+  document.getElementById('personHeadTitle').textContent='声优';
+  body.innerHTML='<div class="message"><div class="loading-dots"><span></span><span></span><span></span></div></div>';
+  bg.classList.add('open');
+  document.body.style.overflow='hidden';
+  if(navigator.vibrate)navigator.vibrate(8);
+  const p=await fetchPerson(personId);
+  if(!bg.classList.contains('open'))return;
+  if(!p){body.innerHTML='<div class="message" style="padding:2rem">声优信息加载失败</div>';return;}
+  document.getElementById('personHeadTitle').textContent=p.name||'声优';
+  const works=p.works||[];
+  const inApp=works.filter(w=>w.app_id).length;
+  const grid=works.map(w=>{
+    const title=w.name_cn||w.name||'';
+    const locked=!w.app_id;
+    return `<div class="work-card${locked?' locked':''}" data-app="${w.app_id||''}" data-bgm="${esc(w.bangumi_id)}" data-title="${esc(title)}">
+      <div class="work-cover">
+        ${w.image?`<img src="${esc(w.image)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`:''}
+        ${locked?'<span class="work-lock">站外</span>':''}
+        ${w.relation?`<span class="work-staff">${esc(w.relation)}</span>`:''}
+      </div>
+      <div class="work-title">${esc(title)}</div>
+      ${w.char_name?`<div class="work-char">饰 ${esc(w.char_name)}</div>`:''}
+    </div>`;
+  }).join('');
+  body.innerHTML=`
+    <div class="person-hero">
+      <img class="person-avatar" src="${esc(p.image||'')}" alt="" onerror="this.style.visibility='hidden'"/>
+      <div>
+        <div class="person-name">${esc(p.name||'')}</div>
+        ${p.career?`<div class="person-meta">${esc(p.career)}</div>`:''}
+        <div class="person-count">${works.length} 部作品${inApp?` · ${inApp} 部可在站内查看`:''}</div>
+      </div>
+    </div>
+    ${grid?`<div class="works-grid">${grid}</div>`:'<div class="char-empty">暂无作品数据</div>'}`;
+  body.querySelectorAll('.work-card').forEach(el=>el.addEventListener('click',()=>{
+    const appId=el.dataset.app;
+    if(appId){closePerson();openDrawer({id:Number(appId),name_cn:el.dataset.title,name:el.dataset.title});}
+    else{openWatchUrl('https://bgm.tv/subject/'+el.dataset.bgm);}
+  }));
+}
+function closePerson(){document.getElementById('personBg').classList.remove('open');}
+document.getElementById('personClose').addEventListener('click',closePerson);
+document.getElementById('personBg').addEventListener('click',e=>{if(e.target===document.getElementById('personBg'))closePerson();});
 
 // 分享卡片浮层事件
 function closeShareCard(){document.getElementById('shareBg').classList.remove('open');}
@@ -1528,7 +1797,7 @@ function buildProfile(){
     if(COMMON_TAGS.has(tag))w*=0.15;
     tagWeights[tag]=w;
   });
-  const scores=favs.map(f=>f.score).filter(Boolean);
+  const scores=favs.map(f=>f.rating?.score||f.score).filter(Boolean);
   const avgScore=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:7.5;
   const years=favs.map(f=>f.date?parseInt(f.date.slice(0,4)):null).filter(Boolean);
   years.sort((a,b)=>a-b);
@@ -1543,7 +1812,7 @@ async function gatherCandidates(profile){
   const candidates=[];
   for(const tag of profile.topTags){
     try{
-      const data=await fetch(`https://api.bgm.tv/v0/subjects?type=2&tag=${encodeURIComponent(tag)}&limit=20&offset=0&sort=rank`).then(r=>r.json());
+      const data=await fetchTagSubjects(tag);
       (data.data||[]).forEach(item=>{
         if(!seen.has(item.id)&&!profile.favoriteIds.has(item.id)){
           seen.add(item.id);item._sourceTag=tag;candidates.push(item);
@@ -1551,10 +1820,10 @@ async function gatherCandidates(profile){
       });
     }catch(e){}
   }
-  const topFavs=[...profile.favorites].filter(f=>f.score).sort((a,b)=>b.score-a.score).slice(0,2);
+  const topFavs=[...profile.favorites].filter(f=>f.rating?.score||f.score).sort((a,b)=>(b.rating?.score||b.score)-(a.rating?.score||a.score)).slice(0,2);
   for(const fav of topFavs){
     try{
-      const rels=await fetch(`https://api.bgm.tv/v0/subjects/${fav.id}/subjects`).then(r=>r.json());
+      const rels=await fetchRelated(fav.id);
       (rels||[]).forEach(rel=>{
         if(rel.type===2&&!seen.has(rel.id)&&!profile.favoriteIds.has(rel.id)){
           seen.add(rel.id);
@@ -1571,8 +1840,9 @@ function scoreCandidate(c,profile){
   let tagMatch=0,totalWeight=0;
   Object.entries(profile.tagWeights).forEach(([t,w])=>{totalWeight+=w;if(candTags.includes(t))tagMatch+=w;});
   const tagScore=totalWeight?tagMatch/totalWeight:0;
+  const cScore=c.rating?.score||c.score;
   let scoreScore=0;
-  if(c.score){const diff=Math.abs(c.score-profile.avgScore);scoreScore=Math.max(0,1-diff/3);if(c.score<6)scoreScore*=0.2;}
+  if(cScore){const diff=Math.abs(cScore-profile.avgScore);scoreScore=Math.max(0,1-diff/3);if(cScore<6)scoreScore*=0.2;}
   else scoreScore=0.3;
   let relScore=c._isRelated?1:Math.min(candTags.filter(t=>profile.tagWeights[t]).length/4,1);
   let eraScore=0.5;
@@ -1582,7 +1852,7 @@ function scoreCandidate(c,profile){
   if(c._isRelated)reason=`《${c._isRelated}》相关`;
   else if(tagScore>0.5){const matched=profile.topTags.find(t=>candTags.includes(t));reason=matched?`「${matched}」高分作品`:'多标签匹配';}
   else if(relScore>0.5)reason='品味相似度高';
-  else if(c.score>=8&&scoreScore>0.6)reason='符合你的高分喜好';
+  else if(cScore>=8&&scoreScore>0.6)reason='符合你的高分喜好';
   else reason='综合推荐';
   return{...c,_recScore:total,_reason:reason};
 }
@@ -1604,8 +1874,9 @@ async function computeRecs(forceRefresh){
 
 function cardWithReason(a){
   const img=(a.images?.common||a.images?.medium||a.images?.grid||'').replace(/^http:/,'https:');
-  const score=a.score?`★ ${a.score.toFixed(1)}`:'暂无';
-  const cls=a.score?'card-score':'card-score none';
+  const s=a.rating?.score||a.score;
+  const score=s?`★ ${s.toFixed(1)}`:'暂无';
+  const cls=s?'card-score':'card-score none';
   const year=a.date?a.date.slice(0,4):'';
   const tags=(a.tags||[]).slice(0,2).map(t=>`<span class="tag-pill">${typeof t==='string'?t:t.name}</span>`).join('');
   const{icon,cls:statusCls}=getTrackIcon(a.id);

@@ -1,8 +1,8 @@
 // FanJi Service Worker - PWA 离线缓存
-const CACHE_VERSION = 'fanji-v2';
-const STATIC_CACHE = 'fanji-static-v2';
-const API_CACHE = 'fanji-api-v2';
-const IMG_CACHE = 'fanji-img-v2';
+const CACHE_VERSION = 'fanji-v6';
+const STATIC_CACHE = 'fanji-static-v5';
+const API_CACHE = 'fanji-api-v5';
+const IMG_CACHE = 'fanji-img-v5';
 
 const STATIC_ASSETS = [
   './',
@@ -42,8 +42,8 @@ self.addEventListener('fetch', event => {
   // 只处理 GET 请求
   if (request.method !== 'GET') return;
 
-  // Bangumi API: 网络优先，失败回退缓存
-  if (url.hostname === 'api.bgm.tv') {
+  // Bangumi API / FanJi API: 网络优先，失败回退缓存
+  if (url.hostname === 'api.bgm.tv' || url.hostname.endsWith('.pages.dev') || url.hostname.endsWith('.workers.dev')) {
     event.respondWith(
       fetch(request)
         .then(res => {
@@ -51,7 +51,7 @@ self.addEventListener('fetch', event => {
           caches.open(API_CACHE).then(c => c.put(request, clone));
           return res;
         })
-        .catch(() => caches.match(request))
+        .catch(() => caches.match(request).then(cached => cached || Response.error()))
     );
     return;
   }

@@ -39,6 +39,24 @@ function pickImg(images) {
   return (images.medium || images.large || images.grid || images.small || '').replace(/^http:/, 'https:');
 }
 
+const CHAR_TTL = 30 * DAY * 1000;
+const PERSON_TTL = 7 * DAY * 1000;
+
+// D1 响应缓存：命中且未过期则跳过 Bangumi 回源。任何异常都静默忽略，不影响主流程
+async function cacheGet(env, key, ttlMs) {
+  try {
+    const row = await env.DB.prepare('SELECT payload, updated_at FROM api_cache WHERE cache_key = ?').bind(key).first();
+    if (row && (Date.now() - row.updated_at) < ttlMs) return JSON.parse(row.payload);
+  } catch (e) {}
+  return null;
+}
+async function cacheSet(env, key, data) {
+  try {
+    await env.DB.prepare('INSERT OR REPLACE INTO api_cache (cache_key, payload, updated_at) VALUES (?, ?, ?)')
+      .bind(key, JSON.stringify(data), Date.now()).run();
+  } catch (e) {}
+}
+
 export async function handleAnimeList(request, env) {
   const params = new URL(request.url).searchParams;
   if (request.method === 'OPTIONS') return corsRes();
@@ -214,6 +232,10 @@ export async function handleAnimeCharacters(request, env) {
   const anime = await env.DB.prepare('SELECT bangumi_id FROM anime WHERE id = ?').bind(id).first();
   if (!anime || !anime.bangumi_id) return jsonRes({ ok: false, error: 'Anime not found', data: [] }, 404);
 
+  const cacheKey = 'chars:' + anime.bangumi_id;
+  const cached = await cacheGet(env, cacheKey, CHAR_TTL);
+  if (cached) return jsonRes(cached, 200, DAY);
+
   let raw;
   try {
     raw = await bgmFetch('/v0/subjects/' + anime.bangumi_id + '/characters');
@@ -229,7 +251,9 @@ export async function handleAnimeCharacters(request, env) {
     actors: (c.actors || []).map(a => ({ id: a.id, name: a.name || '', image: pickImg(a.images) }))
   }));
 
-  return jsonRes({ ok: true, data }, 200, DAY);
+  const payload = { ok: true, data };
+  await cacheSet(env, cacheKey, payload);
+  return jsonRes(payload, 200, DAY);
 }
 
 const CAREER_CN = { seiyu: '声优', mangaka: '漫画家', artist: '艺术家', writer: '作家', illustrator: '插画家', actor: '演员', producer: '制作人', director: '导演', musician: '音乐人' };
@@ -244,6 +268,10 @@ export async function handlePersonDetail(request, env) {
   const match = url.pathname.match(/^\/api\/person\/(\d+)$/);
   if (!match) return jsonRes({ ok: false, error: 'Invalid ID' }, 400);
   const id = parseInt(match[1]);
+
+  const cacheKey = 'person:' + id;
+  const cached = await cacheGet(env, cacheKey, PERSON_TTL);
+  if (cached) return jsonRes(cached, 200, DAY);
 
   let person, chars;
   try {
@@ -296,7 +324,7 @@ export async function handlePersonDetail(request, env) {
   });
   mapped.sort((a, b) => (b.app_id ? 1 : 0) - (a.app_id ? 1 : 0) || (b.score || 0) - (a.score || 0));
 
-  return jsonRes({
+  const payload = {
     ok: true,
     data: {
       id: person.id,
@@ -305,7 +333,9 @@ export async function handlePersonDetail(request, env) {
       career: translateCareer(person.career),
       works: mapped.slice(0, 48)
     }
-  }, 200, DAY);
+  };
+  await cacheSet(env, cacheKey, payload);
+  return jsonRes(payload, 200, DAY);
 }
 
 function formatAnime(row) {

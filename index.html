@@ -908,6 +908,15 @@ function apiFetch(path,opts={}){
 // 仅当核心请求连续失败 WORKER_FAIL_LIMIT 次才整体降级，避免国内一次慢请求(超时)毒死整会话
 function killWorker(){if(++workerFailStreak>=WORKER_FAIL_LIMIT)USE_WORKER_API=false;}
 
+// 预取：用户按下卡片时静默预热详情+角色到 SW 缓存，打开抽屉更快。仅交互触发、每卡一次、忽略结果
+const _prefetched=new Set();
+function prefetchAnime(id){
+  if(!USE_WORKER_API||id==null||_prefetched.has(id))return;
+  _prefetched.add(id);
+  apiFetch('/api/anime/'+id).catch(()=>{});
+  apiFetch('/api/anime/'+id+'/characters').catch(()=>{});
+}
+
 function getExtraFilters(state){
   const extra={};
   if(state.year)extra.air_date=['>='+state.year+'-01-01','<='+state.year+'-12-31'];
@@ -1171,6 +1180,7 @@ function bindCards(grid,items){
   grid.querySelectorAll('.card').forEach((c,i)=>{
     c.style.animationDelay=`${i*0.05}s`;
     addRipple(c);
+    c.addEventListener('pointerdown',()=>prefetchAnime(items[i]&&items[i].id),{passive:true,once:true});
     c.addEventListener('click',e=>{
       if(e.target.closest('.fav-btn'))return;
       openDrawer(items[i]);

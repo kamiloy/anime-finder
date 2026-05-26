@@ -117,6 +117,13 @@ CREATE TABLE IF NOT EXISTS related_anime (
 
 -- ===== 运维表 =====
 
+-- API 响应缓存（Bangumi 角色/声优结果，减少回源）
+CREATE TABLE IF NOT EXISTS api_cache (
+  cache_key TEXT PRIMARY KEY,
+  payload TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
 -- 同步日志
 CREATE TABLE IF NOT EXISTS sync_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

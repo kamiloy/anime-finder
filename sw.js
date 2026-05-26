@@ -1,8 +1,8 @@
 // FanJi Service Worker - PWA 离线缓存
-const CACHE_VERSION = 'fanji-v6';
-const STATIC_CACHE = 'fanji-static-v5';
-const API_CACHE = 'fanji-api-v5';
-const IMG_CACHE = 'fanji-img-v5';
+const CACHE_VERSION = 'fanji-v7';
+const STATIC_CACHE = 'fanji-static-v6';
+const API_CACHE = 'fanji-api-v6';
+const IMG_CACHE = 'fanji-img-v6';
 
 const STATIC_ASSETS = [
   './',
@@ -42,16 +42,24 @@ self.addEventListener('fetch', event => {
   // 只处理 GET 请求
   if (request.method !== 'GET') return;
 
-  // Bangumi API / FanJi API: 网络优先，失败回退缓存
+  // Bangumi API / FanJi API: stale-while-revalidate（先返缓存秒显，后台刷新；国内慢网下重复访问瞬开）
   if (url.hostname === 'api.bgm.tv' || url.hostname.endsWith('.pages.dev') || url.hostname.endsWith('.workers.dev')) {
-    event.respondWith(
-      fetch(request)
-        .then(res => {
+    const revalidate = fetch(request)
+      .then(res => {
+        if (res && res.status === 200) {
           const clone = res.clone();
           caches.open(API_CACHE).then(c => c.put(request, clone));
-          return res;
-        })
-        .catch(() => caches.match(request).then(cached => cached || Response.error()))
+        }
+        return res;
+      })
+      .catch(() => null);
+    event.waitUntil(revalidate.catch(() => {}));
+    event.respondWith(
+      caches.match(request).then(cached =>
+        cached || revalidate.then(res =>
+          res || new Response('{"ok":false,"error":"offline"}', { status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8' } })
+        )
+      )
     );
     return;
   }

@@ -1,13 +1,13 @@
 {
   "name": "FanJi 番剧探索",
   "short_name": "FanJi",
-  "description": "FJ · 发现你的下一部好番 - 来自 Bangumi 的真实评分与简介",
+  "description": "FanJi · 发现你的下一部好番 - 来自 Bangumi 的真实评分与简介",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#080810",
-  "theme_color": "#080810",
+  "background_color": "#0a0814",
+  "theme_color": "#0a0814",
   "lang": "zh-CN",
   "icons": [
     {

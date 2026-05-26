@@ -889,20 +889,24 @@ let myTab='all';
 
 // ===== API =====
 let USE_WORKER_API=true;
+let workerFailStreak=0;
+const WORKER_FAIL_LIMIT=3;
 const API_BASE='https://fanji-api.pages.dev';
 const BGM_BASE='https://api.bgm.tv';
 
 function apiFetch(path,opts={}){
   const url=API_BASE+path;
   const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),10000);
+  const timer=setTimeout(()=>ctrl.abort(),18000);
   const p=opts.params?fetch(url+(url.includes('?')?'&':'?')+new URLSearchParams(opts.params).toString(),{signal:ctrl.signal})
     :opts.body?fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(opts.body),signal:ctrl.signal})
     :fetch(url,{signal:ctrl.signal});
-  return p.then(r=>r.json()).finally(()=>clearTimeout(timer));
+  // 成功即重置失败计数
+  return p.then(r=>r.json()).then(j=>{workerFailStreak=0;return j;}).finally(()=>clearTimeout(timer));
 }
 
-function killWorker(){USE_WORKER_API=false;}
+// 仅当核心请求连续失败 WORKER_FAIL_LIMIT 次才整体降级，避免国内一次慢请求(超时)毒死整会话
+function killWorker(){if(++workerFailStreak>=WORKER_FAIL_LIMIT)USE_WORKER_API=false;}
 
 function getExtraFilters(state){
   const extra={};

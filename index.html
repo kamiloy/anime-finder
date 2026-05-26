@@ -263,6 +263,20 @@ body::after{content:'';position:fixed;bottom:-20%;right:-10%;width:50%;height:50
 .speech-bubble::before{content:'';position:absolute;bottom:100%;left:28px;border:8px solid transparent;border-bottom-color:rgba(168,85,247,0.3)}
 .speech-bubble::after{content:'';position:absolute;bottom:100%;left:29.5px;border:7px solid transparent;border-bottom-color:var(--bg3)}
 
+/* ===== 分享卡片 ===== */
+.share-card-btn{width:100%;padding:13px;border-radius:12px;border:0.5px solid var(--border2);background:linear-gradient(135deg,rgba(168,85,247,0.2),rgba(6,182,212,0.12));color:var(--text);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:14px;transition:transform var(--transition)}
+.share-card-btn:active{transform:scale(0.98)}
+.share-bg{position:fixed;inset:0;z-index:200;background:rgba(4,4,10,0.84);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:24px}
+.share-bg.open{display:flex}
+.share-sheet{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.share-preview{width:100%;border-radius:18px;overflow:hidden;box-shadow:0 24px 70px rgba(168,85,247,0.4);min-height:240px;display:flex;align-items:center;justify-content:center;background:var(--bg2)}
+.share-preview img{width:100%;height:auto;display:block}
+.share-actions{display:flex;gap:12px;width:100%}
+.share-act-btn{flex:1;padding:13px;border-radius:12px;border:0.5px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;transition:transform var(--transition)}
+.share-act-btn:active{transform:scale(0.96)}
+.share-act-btn.primary{background:linear-gradient(135deg,var(--green),var(--cyan));border:none;color:#fff}
+.share-close{background:none;border:none;color:var(--text2);font-size:13px;cursor:pointer;padding:6px 12px}
+
 /* 底部导航栏 */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(8,8,16,0.94);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:0.5px solid rgba(168,85,247,0.2);display:flex;justify-content:space-around;padding:8px 0 calc(8px + var(--safe-bot));height:calc(var(--bottom-nav-h) + var(--safe-bot))}
 .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:10px;padding:4px;transition:color var(--transition);position:relative}
@@ -363,6 +377,7 @@ body::after{content:'';position:fixed;bottom:-20%;right:-10%;width:50%;height:50
     <h1>我的<span>番单</span></h1>
     <p>数据存你手机，永远属于你</p>
     <div class="my-hero-actions">
+      <button class="data-btn" id="statsCardBtn">🎴 战绩卡</button>
       <button class="data-btn" id="exportBtn">📤 导出备份</button>
       <button class="data-btn" id="importBtn">📥 导入</button>
     </div>
@@ -407,6 +422,18 @@ body::after{content:'';position:fixed;bottom:-20%;right:-10%;width:50%;height:50
     <div class="drawer-body" id="drawerBody">
       <div class="message"><div class="loading-dots"><span></span><span></span><span></span></div></div>
     </div>
+  </div>
+</div>
+
+<!-- 分享卡片预览 -->
+<div class="share-bg" id="shareBg">
+  <div class="share-sheet">
+    <div class="share-preview" id="sharePreview"></div>
+    <div class="share-actions">
+      <button class="share-act-btn" id="shareSaveBtn">💾 保存图片</button>
+      <button class="share-act-btn primary" id="shareSendBtn">📤 分享</button>
+    </div>
+    <button class="share-close" id="shareClose">关闭</button>
   </div>
 </div>
 
@@ -460,6 +487,266 @@ function skeletonGrid(n=6){
 // 吉祥物空状态
 function mascotEmpty(text){
   return`<div class="mascot-block">${mascotImg()}<div class="speech-bubble">${text}</div></div>`;
+}
+
+// ===== 分享卡片 =====
+let _shareBlob=null,_shareName='fanji-card.png',_shareText='';
+const SHARE_FONT=(w,s)=>`${w} ${s}px "PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif`;
+
+function loadImageEl(src,cross){
+  return new Promise((res,rej)=>{
+    const im=new Image();
+    if(cross)im.crossOrigin='anonymous';
+    im.onload=()=>res(im);
+    im.onerror=()=>rej(new Error('img load fail'));
+    im.src=src;
+  });
+}
+// Bangumi 封面经 wsrv.nl 代理：附带 CORS 头，避免绘到 canvas 后被污染无法导出
+function proxiedImg(url,w){
+  const bare=url.replace(/^https?:\/\//,'');
+  return`https://wsrv.nl/?url=${encodeURIComponent(bare)}&w=${w}&output=jpg&q=88`;
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function wrapLines(ctx,text,maxW,maxLines){
+  const lines=[];let line='';
+  for(const ch of [...text]){
+    if(ctx.measureText(line+ch).width>maxW&&line){lines.push(line);line=ch;}
+    else line+=ch;
+  }
+  if(line)lines.push(line);
+  if(lines.length>maxLines){
+    const kept=lines.slice(0,maxLines);
+    let last=kept[maxLines-1];
+    while(ctx.measureText(last+'…').width>maxW&&last.length)last=last.slice(0,-1);
+    kept[maxLines-1]=last+'…';
+    return kept;
+  }
+  return lines;
+}
+
+async function generateAnimeCard(d,entry){
+  const W=1080,H=1480;
+  const cv=document.createElement('canvas');
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#0a0814';ctx.fillRect(0,0,W,H);
+
+  const coverUrl=(d.images?.large||d.images?.common||'').replace(/^http:/,'https:');
+  let cover=null;
+  if(coverUrl){try{cover=await loadImageEl(proxiedImg(coverUrl,520),true);}catch(e){cover=null;}}
+
+  // 封面虚化氛围底
+  if(cover){
+    ctx.save();ctx.filter='blur(60px)';ctx.globalAlpha=0.6;
+    const s=Math.max(W/cover.width,H/cover.height)*1.25;
+    const cw=cover.width*s,ch=cover.height*s;
+    ctx.drawImage(cover,(W-cw)/2,(H-ch)/2,cw,ch);
+    ctx.restore();
+  }
+  // 暗化渐变保证文字可读
+  const og=ctx.createLinearGradient(0,0,0,H);
+  og.addColorStop(0,'rgba(10,8,20,0.55)');og.addColorStop(0.45,'rgba(10,8,20,0.8)');og.addColorStop(1,'rgba(10,8,20,0.97)');
+  ctx.fillStyle=og;ctx.fillRect(0,0,W,H);
+  const rg=ctx.createRadialGradient(W/2,180,0,W/2,180,680);
+  rg.addColorStop(0,'rgba(168,85,247,0.3)');rg.addColorStop(1,'rgba(168,85,247,0)');
+  ctx.fillStyle=rg;ctx.fillRect(0,0,W,H);
+
+  // 清晰封面
+  let coverBottom=120;
+  if(cover){
+    const boxW=440,boxH=560;
+    const r=Math.min(boxW/cover.width,boxH/cover.height);
+    const cw=cover.width*r,ch=cover.height*r,cx=(W-cw)/2,cy=104;
+    ctx.save();ctx.shadowColor='rgba(168,85,247,0.55)';ctx.shadowBlur=55;ctx.shadowOffsetY=22;
+    roundRect(ctx,cx,cy,cw,ch,28);ctx.fillStyle='#000';ctx.fill();ctx.restore();
+    ctx.save();roundRect(ctx,cx,cy,cw,ch,28);ctx.clip();ctx.drawImage(cover,cx,cy,cw,ch);ctx.restore();
+    ctx.save();roundRect(ctx,cx,cy,cw,ch,28);ctx.lineWidth=3;ctx.strokeStyle='rgba(168,85,247,0.55)';ctx.stroke();ctx.restore();
+    coverBottom=cy+ch;
+  }
+
+  let y=coverBottom+78;
+  ctx.textAlign='center';
+  // 标题
+  ctx.font=SHARE_FONT(700,62);ctx.fillStyle='#f0f0ff';
+  for(const ln of wrapLines(ctx,d.name_cn||d.name||'',W-160,2)){ctx.fillText(ln,W/2,y);y+=78;}
+  // 副标题
+  const sub=[d.date?d.date.slice(0,4)+'年':'',d.eps?`全${d.eps}话`:''].filter(Boolean).join('   ·   ');
+  if(sub){ctx.font=SHARE_FONT(400,30);ctx.fillStyle='#8888aa';y+=6;ctx.fillText(sub,W/2,y);y+=66;}else y+=12;
+
+  // Bangumi 评分
+  const bScore=d.rating?.score;
+  if(bScore){
+    ctx.font=SHARE_FONT(800,86);ctx.fillStyle='#f59e0b';ctx.fillText('★ '+bScore.toFixed(1),W/2,y);y+=48;
+    const info=['Bangumi 评分',d.rating?.total?d.rating.total.toLocaleString()+' 人':'',d.rating?.rank?'排名 #'+d.rating.rank:''].filter(Boolean).join('   ·   ');
+    ctx.font=SHARE_FONT(400,28);ctx.fillStyle='#8888aa';ctx.fillText(info,W/2,y);y+=70;
+  }else{ctx.font=SHARE_FONT(600,40);ctx.fillStyle='#8888aa';ctx.fillText('暂无评分',W/2,y);y+=70;}
+
+  // 我的评分 / 状态 胶囊
+  const mine=[];
+  if(entry?.rating)mine.push('我的评分 ★ '+entry.rating);
+  if(entry?.status)mine.push(STATUS_ICONS[entry.status]+' '+STATUS_LABELS[entry.status]);
+  if(mine.length){
+    const txt=mine.join('     ·     ');
+    ctx.font=SHARE_FONT(600,34);
+    const ph=68,pw=ctx.measureText(txt).width+72,px=(W-pw)/2;
+    ctx.save();roundRect(ctx,px,y-ph/2,pw,ph,ph/2);
+    ctx.fillStyle='rgba(168,85,247,0.2)';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='rgba(168,85,247,0.55)';ctx.stroke();ctx.restore();
+    ctx.fillStyle='#d8b4fe';ctx.textBaseline='middle';ctx.fillText(txt,W/2,y);ctx.textBaseline='alphabetic';
+    y+=ph/2+50;
+  }
+
+  // 标签
+  const tags=(d.tags||[]).slice(0,3).map(t=>t.name).filter(Boolean);
+  if(tags.length){
+    ctx.font=SHARE_FONT(500,28);
+    const gap=18,ph=58;
+    const ws=tags.map(t=>ctx.measureText(t).width+56);
+    const total=ws.reduce((a,b)=>a+b,0)+gap*(tags.length-1);
+    let x=(W-total)/2;
+    ctx.textBaseline='middle';
+    for(let i=0;i<tags.length;i++){
+      roundRect(ctx,x,y,ws[i],ph,ph/2);
+      ctx.fillStyle='rgba(255,255,255,0.06)';ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle='rgba(6,182,212,0.45)';ctx.stroke();
+      ctx.fillStyle='#a8b4cf';ctx.textAlign='center';ctx.fillText(tags[i],x+ws[i]/2,y+ph/2);
+      x+=ws[i]+gap;
+    }
+    ctx.textBaseline='alphabetic';
+  }
+
+  // 底部品牌栏 + 紫音
+  const fy=H-218;
+  ctx.strokeStyle='rgba(168,85,247,0.22)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(80,fy);ctx.lineTo(W-80,fy);ctx.stroke();
+  ctx.textAlign='left';
+  const lg=ctx.createLinearGradient(96,0,360,0);lg.addColorStop(0,'#a855f7');lg.addColorStop(1,'#06b6d4');
+  ctx.fillStyle=lg;ctx.font=SHARE_FONT(800,52);ctx.fillText('FanJi 番迹',96,fy+86);
+  ctx.fillStyle='#8888aa';ctx.font=SHARE_FONT(400,30);ctx.fillText('发现你的下一部好番',96,fy+138);
+  try{
+    const m=await loadImageEl('shion-mascot.jpg',false);
+    const mh=170,mw=mh*(m.width/m.height),mx=W-80-mw,my=fy+34;
+    ctx.save();roundRect(ctx,mx,my,mw,mh,16);ctx.clip();ctx.drawImage(m,mx,my,mw,mh);ctx.restore();
+    ctx.save();roundRect(ctx,mx,my,mw,mh,16);ctx.lineWidth=2;ctx.strokeStyle='rgba(168,85,247,0.45)';ctx.stroke();ctx.restore();
+  }catch(e){}
+
+  return cv;
+}
+
+// 战绩档案卡片
+async function generateStatsCard(){
+  const all=Object.values(getTracker());
+  const W=1080,H=1480;
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#0a0814';ctx.fillRect(0,0,W,H);
+  let g=ctx.createRadialGradient(W/2,300,0,W/2,300,840);
+  g.addColorStop(0,'rgba(168,85,247,0.32)');g.addColorStop(1,'rgba(168,85,247,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  g=ctx.createRadialGradient(W*0.85,H-220,0,W*0.85,H-220,560);
+  g.addColorStop(0,'rgba(6,182,212,0.18)');g.addColorStop(1,'rgba(6,182,212,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+  // 紫音主视觉
+  let topY=200;
+  try{
+    const m=await loadImageEl('shion-mascot.jpg',false);
+    const mh=300,mw=mh*(m.width/m.height),mx=(W-mw)/2,my=96;
+    ctx.save();ctx.shadowColor='rgba(168,85,247,0.55)';ctx.shadowBlur=52;ctx.shadowOffsetY=18;
+    roundRect(ctx,mx,my,mw,mh,24);ctx.fillStyle='#000';ctx.fill();ctx.restore();
+    ctx.save();roundRect(ctx,mx,my,mw,mh,24);ctx.clip();ctx.drawImage(m,mx,my,mw,mh);ctx.restore();
+    ctx.save();roundRect(ctx,mx,my,mw,mh,24);ctx.lineWidth=3;ctx.strokeStyle='rgba(168,85,247,0.5)';ctx.stroke();ctx.restore();
+    topY=my+mh;
+  }catch(e){}
+
+  let y=topY+78;
+  ctx.textAlign='center';
+  ctx.font=SHARE_FONT(800,68);ctx.fillStyle='#f0f0ff';ctx.fillText('我的追番档案',W/2,y);y+=52;
+  ctx.font=SHARE_FONT(400,30);ctx.fillStyle='#8888aa';ctx.fillText('FanJi 番迹 · 追番战绩',W/2,y);y+=72;
+
+  // 2x2 数据格
+  const watching=all.filter(e=>e.status==='watching').length;
+  const watched=all.filter(e=>e.status==='watched').length;
+  const wish=all.filter(e=>e.status==='wish').length;
+  const cells=[{n:all.length,label:'追番总数',c:'#a855f7'},{n:watched,label:'看完',c:'#06b6d4'},{n:watching,label:'在看',c:'#3b82f6'},{n:wish,label:'想看',c:'#f59e0b'}];
+  const gap=24,padX=80,cw=(W-padX*2-gap)/2,chh=168;
+  for(let i=0;i<4;i++){
+    const x=padX+(i%2)*(cw+gap),cy=y+(i/2|0)*(chh+gap);
+    roundRect(ctx,x,cy,cw,chh,20);ctx.fillStyle='rgba(255,255,255,0.05)';ctx.fill();
+    ctx.lineWidth=1.5;ctx.strokeStyle='rgba(168,85,247,0.25)';ctx.stroke();
+    ctx.fillStyle=cells[i].c;ctx.font=SHARE_FONT(800,80);ctx.fillText(String(cells[i].n),x+cw/2,cy+96);
+    ctx.fillStyle='#8888aa';ctx.font=SHARE_FONT(500,30);ctx.fillText(cells[i].label,x+cw/2,cy+140);
+  }
+  y+=chh*2+gap+72;
+
+  // 平均打分
+  const rated=all.map(e=>e.rating).filter(r=>r>0);
+  if(rated.length){
+    const avg=(rated.reduce((a,b)=>a+b,0)/rated.length).toFixed(1);
+    ctx.font=SHARE_FONT(700,42);ctx.fillStyle='#f59e0b';ctx.fillText('平均打分 ★ '+avg,W/2,y);y+=70;
+  }
+
+  // 口味 Top3
+  const tc={};
+  all.forEach(e=>(e.anime?.tags||[]).forEach(t=>{const n=typeof t==='string'?t:t.name;if(!n||COMMON_TAGS.has(n))return;tc[n]=(tc[n]||0)+1;}));
+  const top=Object.entries(tc).sort((a,b)=>b[1]-a[1]).slice(0,3).map(e=>e[0]);
+  if(top.length){
+    ctx.font=SHARE_FONT(400,30);ctx.fillStyle='#8888aa';ctx.fillText('你的口味',W/2,y);y+=58;
+    ctx.font=SHARE_FONT(600,34);
+    const gp=18,ph=64,ws=top.map(t=>ctx.measureText(t).width+64);
+    const total=ws.reduce((a,b)=>a+b,0)+gp*(top.length-1);
+    let x=(W-total)/2;ctx.textBaseline='middle';
+    for(let i=0;i<top.length;i++){
+      roundRect(ctx,x,y,ws[i],ph,ph/2);ctx.fillStyle='rgba(168,85,247,0.18)';ctx.fill();
+      ctx.lineWidth=2;ctx.strokeStyle='rgba(168,85,247,0.5)';ctx.stroke();
+      ctx.fillStyle='#d8b4fe';ctx.textAlign='center';ctx.fillText(top[i],x+ws[i]/2,y+ph/2);
+      x+=ws[i]+gp;
+    }
+    ctx.textBaseline='alphabetic';
+  }
+
+  // 品牌栏
+  const fy=H-150;ctx.textAlign='center';
+  const lg=ctx.createLinearGradient(W/2-200,0,W/2+200,0);lg.addColorStop(0,'#a855f7');lg.addColorStop(1,'#06b6d4');
+  ctx.fillStyle=lg;ctx.font=SHARE_FONT(800,48);ctx.fillText('FanJi 番迹',W/2,fy+40);
+  ctx.fillStyle='#8888aa';ctx.font=SHARE_FONT(400,28);ctx.fillText('发现你的下一部好番 · '+new Date().toISOString().slice(0,10).replace(/-/g,'.'),W/2,fy+86);
+  return cv;
+}
+
+// 生成 → 弹预览（单番卡 / 战绩卡共用）
+async function presentCard(canvasPromise,name,text){
+  const bg=document.getElementById('shareBg');
+  const prev=document.getElementById('sharePreview');
+  prev.innerHTML='<div class="message"><div class="loading-dots"><span></span><span></span><span></span></div></div>';
+  bg.classList.add('open');
+  _shareBlob=null;
+  try{
+    const cv=await canvasPromise;
+    await new Promise((res,rej)=>cv.toBlob(b=>{if(b){_shareBlob=b;res();}else rej(new Error('导出失败'));},'image/png'));
+    const url=URL.createObjectURL(_shareBlob);
+    prev.innerHTML=`<img src="${url}" alt="分享卡片"/>`;
+    _shareName=name;_shareText=text;
+  }catch(e){
+    console.error('share card error',e);
+    prev.innerHTML='<div class="message" style="padding:2rem">卡片生成失败，请重试</div>';
+  }
+}
+
+function openShareCard(d){
+  const name=(d.name_cn||d.name||'card').replace(/[\\/:*?"<>|]/g,'').slice(0,20);
+  presentCard(generateAnimeCard(d,getEntry(d.id)),`fanji-${name}.png`,`【${d.name_cn||d.name}】— 我在 FanJi 番迹追番`);
+}
+
+function openStatsCard(){
+  if(!Object.keys(getTracker()).length){showToast('先追几部番再来生成战绩卡吧～');return;}
+  presentCard(generateStatsCard(),`fanji-战绩-${new Date().toISOString().slice(0,10)}.png`,'这是我的追番战绩 — FanJi 番迹');
 }
 
 async function openWatchUrl(url){
@@ -937,6 +1224,7 @@ async function openDrawer(a){
       <div class="drawer-tags">${tags}</div>
       ${buildTrackSection(d)}
       ${ratingHtml}
+      <button class="share-card-btn" id="shareCardBtn">📤 生成分享卡片</button>
       <div class="desc-section">
         <div class="section-label">简介</div>
         <div class="desc-text${longDesc?' collapsed':''}" id="descText">${desc}</div>
@@ -951,6 +1239,7 @@ async function openDrawer(a){
       </div>`;
     wireTrackListeners(d);
     updateDrawerQuickBtn(d.id);
+    document.getElementById('shareCardBtn')?.addEventListener('click',()=>openShareCard(d));
     document.getElementById('expandBtn')?.addEventListener('click',()=>{
       document.getElementById('descText').classList.remove('collapsed');
       document.getElementById('expandBtn').style.display='none';
@@ -987,7 +1276,31 @@ document.getElementById('drawerTrackQuick').addEventListener('click',()=>{
 document.getElementById('drawerClose').addEventListener('click',closeDrawer);
 document.getElementById('drawerBg').addEventListener('click',e=>{if(e.target===document.getElementById('drawerBg'))closeDrawer();});
 function closeDrawer(){document.getElementById('drawerBg').classList.remove('open');document.body.style.overflow='';currentDetailAnime=null;}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeShareCard();closeDrawer();}});
+
+// 分享卡片浮层事件
+function closeShareCard(){document.getElementById('shareBg').classList.remove('open');}
+document.getElementById('shareClose').addEventListener('click',closeShareCard);
+document.getElementById('shareBg').addEventListener('click',e=>{if(e.target===document.getElementById('shareBg'))closeShareCard();});
+document.getElementById('shareSaveBtn').addEventListener('click',()=>{
+  if(!_shareBlob)return;
+  const url=URL.createObjectURL(_shareBlob);
+  const a=document.createElement('a');a.href=url;a.download=_shareName;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+  showToast('已保存卡片图片');
+});
+document.getElementById('shareSendBtn').addEventListener('click',async()=>{
+  if(!_shareBlob)return;
+  const file=new File([_shareBlob],_shareName,{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],text:_shareText});}
+    catch(e){if(e.name!=='AbortError')showToast('分享已取消');}
+  }else{
+    showToast('当前环境不支持直接分享，已为你保存图片');
+    document.getElementById('shareSaveBtn').click();
+  }
+});
 
 // ===== 导航 =====
 function switchView(view){
@@ -1091,6 +1404,7 @@ function exportData(){
   showToast('已导出番单备份 📤');
 }
 
+document.getElementById('statsCardBtn').addEventListener('click',openStatsCard);
 document.getElementById('exportBtn').addEventListener('click',exportData);
 document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change',e=>{

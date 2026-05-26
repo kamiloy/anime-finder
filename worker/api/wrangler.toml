@@ -1,0 +1,11 @@
+name = "fanji-api"
+main = "worker.js"
+compatibility_date = "2026-05-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fanji-db"
+database_id = "c9f163ae-6aa9-423c-bec8-71bc01e6aab8"
+
+[vars]
+CORS_ORIGIN = "*"

@@ -7,4 +7,9 @@ android/
 Thumbs.db
 screenshot-*.png
 test-*.png
+worker/seed-checkpoint.json
+worker/seed-*.sql
+worker/expand-checkpoint.json
+worker/expand-*.sql
+worker/expand-chunks/
 

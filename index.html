@@ -925,6 +925,7 @@ const BGM_BASE='https://api.bgm.tv';
 // 图片源：Bangumi 图床 lain.bgm.tv 在国内被阻断，经 CF 边缘代理（pages.dev 国内可达）；非 lain 链接原样返回
 function imgSrc(url){
   if(!url)return'';
+  if(url.startsWith(API_BASE+'/api/img'))return url; // 已代理，幂等返回，避免重复包裹
   const s=url.replace(/^http:/,'https:');
   return s.includes('lain.bgm.tv')?API_BASE+'/api/img?u='+encodeURIComponent(s):s;
 }
@@ -1683,11 +1684,11 @@ async function loadCharacters(id){
     const isMain=c.relation==='主角';
     return `<div class="char-card">
       <div class="char-thumb">
-        ${c.image?`<img src="${esc(c.image)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`:''}
+        ${c.image?`<img src="${esc(imgSrc(c.image))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`:''}
         ${c.relation?`<span class="char-relation${isMain?' main':''}">${esc(c.relation)}</span>`:''}
       </div>
       <div class="char-name">${esc(c.name)}</div>
-      ${va?`<div class="char-va" data-person="${esc(va.id)}">${va.image?`<img src="${esc(va.image)}" alt="" onerror="this.style.display='none'"/>`:''}<span>${esc(va.name)}</span></div>`:''}
+      ${va?`<div class="char-va" data-person="${esc(va.id)}">${va.image?`<img src="${esc(imgSrc(va.image))}" alt="" onerror="this.style.display='none'"/>`:''}<span>${esc(va.name)}</span></div>`:''}
     </div>`;
   }).join('');
   sec.innerHTML=`<div class="section-label">角色 &amp; 声优</div><div class="char-scroll">${cards}</div>`;
@@ -1715,7 +1716,7 @@ async function openPerson(personId){
     const locked=!w.app_id;
     return `<div class="work-card${locked?' locked':''}" data-app="${w.app_id||''}" data-bgm="${esc(w.bangumi_id)}" data-title="${esc(title)}">
       <div class="work-cover">
-        ${w.image?`<img src="${esc(w.image)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`:''}
+        ${w.image?`<img src="${esc(imgSrc(w.image))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`:''}
         ${locked?'<span class="work-lock">站外</span>':''}
         ${w.relation?`<span class="work-staff">${esc(w.relation)}</span>`:''}
       </div>
@@ -1725,7 +1726,7 @@ async function openPerson(personId){
   }).join('');
   body.innerHTML=`
     <div class="person-hero">
-      <img class="person-avatar" src="${esc(p.image||'')}" alt="" onerror="this.style.visibility='hidden'"/>
+      <img class="person-avatar" src="${esc(imgSrc(p.image||''))}" alt="" onerror="this.style.visibility='hidden'"/>
       <div>
         <div class="person-name">${esc(p.name||'')}</div>
         ${p.career?`<div class="person-meta">${esc(p.career)}</div>`:''}

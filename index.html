@@ -922,6 +922,13 @@ const WORKER_FAIL_LIMIT=3;
 const API_BASE='https://fanji-api.pages.dev';
 const BGM_BASE='https://api.bgm.tv';
 
+// 图片源：Bangumi 图床 lain.bgm.tv 在国内被阻断，经 CF 边缘代理（pages.dev 国内可达）；非 lain 链接原样返回
+function imgSrc(url){
+  if(!url)return'';
+  const s=url.replace(/^http:/,'https:');
+  return s.includes('lain.bgm.tv')?API_BASE+'/api/img?u='+encodeURIComponent(s):s;
+}
+
 function apiFetch(path,opts={}){
   const url=API_BASE+path;
   const ctrl=new AbortController();
@@ -1046,8 +1053,8 @@ async function fetchCharacters(id){
     const raw=await fetch(BGM_BASE+'/v0/subjects/'+id+'/characters').then(r=>r.json());
     return (Array.isArray(raw)?raw:[]).map(c=>({
       id:c.id,name:c.name||'',relation:c.relation||'',
-      image:((c.images||{}).medium||(c.images||{}).grid||'').replace(/^http:/,'https:'),
-      actors:(c.actors||[]).map(a=>({id:a.id,name:a.name||'',image:((a.images||{}).medium||(a.images||{}).grid||'').replace(/^http:/,'https:')}))
+      image:imgSrc((c.images||{}).medium||(c.images||{}).grid||''),
+      actors:(c.actors||[]).map(a=>({id:a.id,name:a.name||'',image:imgSrc((a.images||{}).medium||(a.images||{}).grid||'')}))
     }));
   }catch(e){return [];}
 }
@@ -1068,12 +1075,12 @@ async function fetchPerson(personId){
       works.push({
         bangumi_id:c.subject_id,name:c.subject_name||'',name_cn:c.subject_name_cn||'',
         char_name:c.name||'',relation:c.staff||'',app_id:null,score:0,
-        image:((c.images||{}).medium||(c.images||{}).grid||'').replace(/^http:/,'https:')
+        image:imgSrc((c.images||{}).medium||(c.images||{}).grid||'')
       });
     }
     return {
       id:p.id,name:p.name||'',
-      image:((p.images||{}).medium||(p.images||{}).grid||'').replace(/^http:/,'https:'),
+      image:imgSrc((p.images||{}).medium||(p.images||{}).grid||''),
       career:Array.isArray(p.career)?p.career.join(' / '):'',
       works:works.slice(0,48)
     };
@@ -1162,7 +1169,7 @@ function timeAgo(ts){
   return Math.floor(d/2592000)+'个月前';
 }
 function cardHtml(a,opts={}){
-  const img=(a.images?.common||a.images?.medium||a.images?.grid||'').replace(/^http:/,'https:');
+  const img=imgSrc(a.images?.common||a.images?.medium||a.images?.grid||'');
   const s=a.rating?.score||a.score;
   const score=s?`★ ${s.toFixed(1)}`:'暂无';
   const cls=s?'card-score':'card-score none';
@@ -1340,7 +1347,7 @@ function renderTodayWatching(cal){
   if(!list.length){box.hidden=true;box.innerHTML='';return;}
   const line=SHION_UPDATE_LINES[new Date().getDay()%SHION_UPDATE_LINES.length];
   const cards=list.map(a=>{
-    const img=(a.images?.common||a.images?.medium||a.images?.grid||'').replace(/^http:/,'https:');
+    const img=imgSrc(a.images?.common||a.images?.medium||a.images?.grid||'');
     return`<button class="tw-card" data-id="${a.id}"><img src="${img}" loading="lazy" alt=""/><span class="tw-card-title">${a.name_cn||a.name}</span></button>`;
   }).join('');
   box.innerHTML=`<div class="tw-head"><span class="tw-icon">🔔</span><span class="tw-title">你在追的 <b>${list.length}</b> 部今天更新</span><span class="tw-shion">${line}</span></div><div class="tw-strip">${cards}</div>`;
@@ -1577,7 +1584,7 @@ async function openDrawer(a){
   try{
     const d=await fetchDetail(a.id);
     currentDetailAnime=d;
-    const img=(d.images?.large||d.images?.common||'').replace(/^http:/,'https:');
+    const img=imgSrc(d.images?.common||d.images?.large||'');
     const title=d.name_cn||d.name;
     const sub=[d.name,d.date?d.date.slice(0,4)+'年':'',d.eps?`共${d.eps}集`:''].filter(Boolean).join(' · ');
     const tags=(d.tags||[]).slice(0,8).map(t=>`<span class="drawer-tag">${t.name}</span>`).join('');
@@ -2002,7 +2009,7 @@ async function computeRecs(forceRefresh){
 }
 
 function cardWithReason(a){
-  const img=(a.images?.common||a.images?.medium||a.images?.grid||'').replace(/^http:/,'https:');
+  const img=imgSrc(a.images?.common||a.images?.medium||a.images?.grid||'');
   const s=a.rating?.score||a.score;
   const score=s?`★ ${s.toFixed(1)}`:'暂无';
   const cls=s?'card-score':'card-score none';

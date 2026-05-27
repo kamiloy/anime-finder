@@ -39,6 +39,45 @@ function pickImg(images) {
   return (images.medium || images.large || images.grid || images.small || '').replace(/^http:/, 'https:');
 }
 
+// 图片代理：CF 边缘代取 Bangumi 图片 CDN（lain.bgm.tv 在国内被阻断，但 CF 边缘能连、pages.dev 国内能通）
+export async function handleImageProxy(context) {
+  const { request } = context;
+  if (request.method === 'OPTIONS') return corsRes();
+  const reqUrl = new URL(request.url);
+  const u = reqUrl.searchParams.get('u');
+  if (!u) return new Response('missing u', { status: 400 });
+  let target;
+  try { target = new URL(u); } catch { return new Response('bad url', { status: 400 }); }
+  // SSRF 防护：仅放行 Bangumi 图片 CDN，杜绝开放代理
+  if (target.hostname !== 'lain.bgm.tv') return new Response('forbidden host', { status: 403 });
+  target.protocol = 'https:';
+  const targetStr = target.toString();
+
+  const cache = caches.default;
+  const cacheKey = new Request(targetStr, { method: 'GET' });
+  const hit = await cache.match(cacheKey);
+  if (hit) return hit;
+
+  let upstream;
+  try {
+    upstream = await fetch(targetStr, {
+      headers: { 'User-Agent': BGM_UA, 'Referer': 'https://bgm.tv/' },
+      cf: { cacheTtl: DAY, cacheEverything: true }
+    });
+  } catch (e) {
+    return new Response('upstream fetch failed', { status: 502 });
+  }
+  if (!upstream.ok) return new Response('upstream ' + upstream.status, { status: 502 });
+
+  const headers = new Headers();
+  headers.set('Content-Type', upstream.headers.get('Content-Type') || 'image/jpeg');
+  headers.set('Cache-Control', 'public, max-age=604800, s-maxage=2592000');
+  headers.set('Access-Control-Allow-Origin', '*');
+  const resp = new Response(upstream.body, { status: 200, headers });
+  context.waitUntil(cache.put(cacheKey, resp.clone()));
+  return resp;
+}
+
 const CHAR_TTL = 30 * DAY * 1000;
 const PERSON_TTL = 7 * DAY * 1000;
 

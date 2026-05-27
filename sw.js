@@ -1,8 +1,11 @@
 // FanJi Service Worker - PWA 离线缓存
-const CACHE_VERSION = 'fanji-v7';
-const STATIC_CACHE = 'fanji-static-v6';
-const API_CACHE = 'fanji-api-v6';
-const IMG_CACHE = 'fanji-img-v6';
+const CACHE_VERSION = 'fanji-v8';
+const STATIC_CACHE = 'fanji-static-v7';
+const API_CACHE = 'fanji-api-v7';
+const IMG_CACHE = 'fanji-img-v7';
+
+// 1x1 透明 GIF：图片网络失败时的占位，避免破图图标（也避免把网络错误伪装成误导性的 404）
+const TRANSPARENT_GIF = Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'), c => c.charCodeAt(0));
 
 const STATIC_ASSETS = [
   './',
@@ -43,7 +46,8 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return;
 
   // Bangumi API / FanJi API: stale-while-revalidate（先返缓存秒显，后台刷新；国内慢网下重复访问瞬开）
-  if (url.hostname === 'api.bgm.tv' || url.hostname.endsWith('.pages.dev') || url.hostname.endsWith('.workers.dev')) {
+  // 注意：排除 /api/img（图片代理），它走下方图片分支，别被当成 JSON 接口塞 offline 兜底
+  if (url.pathname !== '/api/img' && (url.hostname === 'api.bgm.tv' || url.hostname.endsWith('.pages.dev') || url.hostname.endsWith('.workers.dev'))) {
     const revalidate = fetch(request)
       .then(res => {
         if (res && res.status === 200) {
@@ -64,8 +68,8 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 图片资源: 缓存优先
-  if (url.hostname === 'lain.bgm.tv' || /\.(jpg|jpeg|png|webp|gif)$/i.test(url.pathname)) {
+  // 图片资源（含 /api/img 代理、直连 lain、任意图片扩展名）: 缓存优先
+  if (url.pathname === '/api/img' || url.hostname === 'lain.bgm.tv' || /\.(jpg|jpeg|png|webp|gif)$/i.test(url.pathname)) {
     event.respondWith(
       caches.match(request).then(cached => {
         if (cached) return cached;
@@ -75,7 +79,10 @@ self.addEventListener('fetch', event => {
             caches.open(IMG_CACHE).then(c => c.put(request, clone));
           }
           return res;
-        }).catch(() => new Response('', { status: 404 }));
+        }).catch(() => new Response(TRANSPARENT_GIF, {
+          status: 200,
+          headers: { 'Content-Type': 'image/gif', 'Cache-Control': 'no-store' }
+        }));
       })
     );
     return;

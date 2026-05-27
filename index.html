@@ -108,6 +108,13 @@ body::after{content:'';position:fixed;bottom:-20%;right:-10%;width:50%;height:50
 .card-img-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(8,8,16,0.5) 100%);pointer-events:none;transition:opacity var(--transition)}
 .card:hover .card-img-wrap::after{opacity:0.4}
 .card img{width:100%;height:100%;object-fit:cover;display:block;background:var(--bg3)}
+/* 图片加载：骨架微光（容器背景）+ 图片淡入 */
+@keyframes imgShimmer{to{background-position:-200% 0}}
+.card-img-wrap,.char-thumb,.work-cover{background:linear-gradient(110deg,var(--bg3) 28%,rgba(168,85,247,0.18) 50%,rgba(6,182,212,0.10) 58%,var(--bg3) 78%);background-size:200% 100%;animation:imgShimmer 1.2s linear infinite}
+.card-img-wrap.img-done,.char-thumb.img-done,.work-cover.img-done{animation:none;background:var(--bg3)}
+img.img-fade{opacity:0;transition:opacity .45s ease}
+img.img-fade.loaded{opacity:1}
+@media(prefers-reduced-motion:reduce){.card-img-wrap,.char-thumb,.work-cover{animation:none}img.img-fade{transition:none;opacity:1}}
 .fav-btn{position:absolute;top:6px;right:6px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:none;color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all var(--transition);z-index:2}
 .fav-btn:active{transform:scale(0.85)}
 /* 追番状态颜色 */
@@ -929,6 +936,8 @@ function imgSrc(url){
   const s=url.replace(/^http:/,'https:');
   return s.includes('lain.bgm.tv')?API_BASE+'/api/img?u='+encodeURIComponent(s):s;
 }
+// 图片加载完成：淡入 + 停掉所在容器的骨架微光
+function imgLoaded(el){el.classList.add('loaded');const w=el.closest('.card-img-wrap,.char-thumb,.work-cover');if(w)w.classList.add('img-done');}
 
 function apiFetch(path,opts={}){
   const url=API_BASE+path;
@@ -1189,7 +1198,7 @@ function cardHtml(a,opts={}){
     <div class="card-img-wrap">
       ${rankBadge}
       <button class="fav-btn ${statusCls}" data-fid="${a.id}">${icon}</button>
-      <img src="${img}" alt="" loading="lazy"/>
+      <img src="${img}" alt="" loading="lazy" class="img-fade" onload="imgLoaded(this)"/>
     </div>
     <div class="card-body">
       <div class="card-title">${a.name_cn||a.name}</div>
@@ -1349,7 +1358,7 @@ function renderTodayWatching(cal){
   const line=SHION_UPDATE_LINES[new Date().getDay()%SHION_UPDATE_LINES.length];
   const cards=list.map(a=>{
     const img=imgSrc(a.images?.common||a.images?.medium||a.images?.grid||'');
-    return`<button class="tw-card" data-id="${a.id}"><img src="${img}" loading="lazy" alt=""/><span class="tw-card-title">${a.name_cn||a.name}</span></button>`;
+    return`<button class="tw-card" data-id="${a.id}"><img src="${img}" loading="lazy" alt="" class="img-fade" onload="imgLoaded(this)"/><span class="tw-card-title">${a.name_cn||a.name}</span></button>`;
   }).join('');
   box.innerHTML=`<div class="tw-head"><span class="tw-icon">🔔</span><span class="tw-title">你在追的 <b>${list.length}</b> 部今天更新</span><span class="tw-shion">${line}</span></div><div class="tw-strip">${cards}</div>`;
   box.hidden=false;
@@ -1604,7 +1613,7 @@ async function openDrawer(a){
     }
     const encTitle=encodeURIComponent(title);
     body.innerHTML=`
-      <img class="drawer-cover" src="${img}" alt=""/>
+      <img class="drawer-cover img-fade" src="${img}" alt="" onload="imgLoaded(this)"/>
       <div class="drawer-title">${title}</div>
       <div class="drawer-subtitle">${sub}</div>
       <div class="drawer-tags">${tags}</div>
@@ -1684,11 +1693,11 @@ async function loadCharacters(id){
     const isMain=c.relation==='主角';
     return `<div class="char-card">
       <div class="char-thumb">
-        ${c.image?`<img src="${esc(imgSrc(c.image))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`:''}
+        ${c.image?`<img src="${esc(imgSrc(c.image))}" alt="" loading="lazy" class="img-fade" onload="imgLoaded(this)" onerror="this.style.visibility='hidden'"/>`:''}
         ${c.relation?`<span class="char-relation${isMain?' main':''}">${esc(c.relation)}</span>`:''}
       </div>
       <div class="char-name">${esc(c.name)}</div>
-      ${va?`<div class="char-va" data-person="${esc(va.id)}">${va.image?`<img src="${esc(imgSrc(va.image))}" alt="" onerror="this.style.display='none'"/>`:''}<span>${esc(va.name)}</span></div>`:''}
+      ${va?`<div class="char-va" data-person="${esc(va.id)}">${va.image?`<img src="${esc(imgSrc(va.image))}" alt="" class="img-fade" onload="imgLoaded(this)" onerror="this.style.display='none'"/>`:''}<span>${esc(va.name)}</span></div>`:''}
     </div>`;
   }).join('');
   sec.innerHTML=`<div class="section-label">角色 &amp; 声优</div><div class="char-scroll">${cards}</div>`;
@@ -1716,7 +1725,7 @@ async function openPerson(personId){
     const locked=!w.app_id;
     return `<div class="work-card${locked?' locked':''}" data-app="${w.app_id||''}" data-bgm="${esc(w.bangumi_id)}" data-title="${esc(title)}">
       <div class="work-cover">
-        ${w.image?`<img src="${esc(imgSrc(w.image))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`:''}
+        ${w.image?`<img src="${esc(imgSrc(w.image))}" alt="" loading="lazy" class="img-fade" onload="imgLoaded(this)" onerror="this.style.visibility='hidden'"/>`:''}
         ${locked?'<span class="work-lock">站外</span>':''}
         ${w.relation?`<span class="work-staff">${esc(w.relation)}</span>`:''}
       </div>
@@ -1726,7 +1735,7 @@ async function openPerson(personId){
   }).join('');
   body.innerHTML=`
     <div class="person-hero">
-      <img class="person-avatar" src="${esc(imgSrc(p.image||''))}" alt="" onerror="this.style.visibility='hidden'"/>
+      <img class="person-avatar img-fade" src="${esc(imgSrc(p.image||''))}" alt="" onload="imgLoaded(this)" onerror="this.style.visibility='hidden'"/>
       <div>
         <div class="person-name">${esc(p.name||'')}</div>
         ${p.career?`<div class="person-meta">${esc(p.career)}</div>`:''}
@@ -2020,7 +2029,7 @@ function cardWithReason(a){
   return`<div class="card" data-id="${a.id}">
     <div class="card-img-wrap">
       <button class="fav-btn ${statusCls}" data-fid="${a.id}">${icon}</button>
-      <img src="${img}" alt="" loading="lazy"/>
+      <img src="${img}" alt="" loading="lazy" class="img-fade" onload="imgLoaded(this)"/>
       <div class="rec-reason">${a._reason}</div>
     </div>
     <div class="card-body">

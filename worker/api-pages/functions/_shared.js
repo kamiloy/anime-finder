@@ -353,8 +353,15 @@ function formatAnime(row) {
     score: row.score || 0,
     date: row.air_date || '',
     tags: [],
-    eps: row.total_episodes || 0
+    eps: row.total_episodes || 0,
+    shion_review: row.shion_review || '',
+    mood_tags: parseMoods(row.mood_tags)
   };
+}
+
+function parseMoods(s) {
+  if (!s) return [];
+  try { const a = JSON.parse(s); return Array.isArray(a) ? a : []; } catch { return []; }
 }
 
 function formatRating(r, rank) {

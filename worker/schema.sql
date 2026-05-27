@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS anime (
   nsfw INTEGER DEFAULT 0,
   score REAL DEFAULT 0,
   rank INTEGER DEFAULT 0,
+  -- 紫音 AI 离线预生成（决策卡锐评 + 心情/场景标签 JSON 字符串）
+  shion_review TEXT DEFAULT '',
+  mood_tags TEXT DEFAULT '',
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );

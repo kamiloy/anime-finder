@@ -157,6 +157,33 @@ body::after{content:'';position:fixed;bottom:-20%;right:-10%;width:50%;height:50
 .day-name{font-size:14px;font-weight:500}
 .day-name.today{color:var(--accent)}
 .day-count{font-size:11px;color:var(--text3);margin-left:auto}
+/* 今日在追更新提醒 */
+.today-watching{margin-bottom:1.5rem;padding:0.95rem 1.05rem;border-radius:var(--radius-lg);background:linear-gradient(135deg,rgba(168,85,247,0.16),rgba(6,182,212,0.06));border:1px solid var(--accent-border-strong);box-shadow:0 0 24px rgba(168,85,247,0.12);animation:twIn .45s cubic-bezier(0.16,1,0.3,1) both}
+@keyframes twIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.tw-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap}
+.tw-icon{font-size:1.1rem;filter:drop-shadow(0 0 6px var(--neon-accent))}
+.tw-title{font-family:var(--font-heading);font-weight:700;font-size:1rem;color:var(--text)}
+.tw-title b{color:var(--accent);font-size:1.1rem;margin:0 2px}
+.tw-shion{font-size:.78rem;color:var(--text2);font-style:italic;width:100%;line-height:1.4}
+.tw-strip{display:flex;gap:.65rem;overflow-x:auto;padding-bottom:.25rem;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tw-strip::-webkit-scrollbar{display:none}
+.tw-card{flex:0 0 84px;width:84px;background:none;border:none;padding:0;cursor:pointer;display:flex;flex-direction:column;gap:.35rem;text-align:left}
+.tw-card img{width:84px;height:118px;object-fit:cover;border-radius:var(--radius);border:1px solid var(--accent-border);transition:transform var(--transition)}
+.tw-card:active img{transform:scale(.95)}
+.tw-card-title{font-size:.72rem;line-height:1.25;color:var(--text2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* 决策卡（3秒判断追不追） */
+.decision-card{margin:14px 0;padding:13px 14px;border-radius:var(--radius-lg);background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(6,182,212,0.05));border:1px solid var(--accent-border-strong);box-shadow:0 0 20px rgba(168,85,247,0.1)}
+.dc-chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.dc-chip{display:inline-flex;align-items:center;gap:4px;font-size:.76rem;font-weight:600;padding:5px 10px;border-radius:99px;background:var(--bg3);color:var(--text);border:0.5px solid var(--accent-border);white-space:nowrap}
+.dc-chip.tier-god{color:#fff;background:linear-gradient(135deg,#a855f7,#06b6d4);border:none;box-shadow:0 0 10px rgba(168,85,247,0.4)}
+.dc-chip.tier-good{color:var(--accent);border-color:var(--accent-border-strong)}
+.dc-chip.tier-mid{color:var(--text2)}
+.dc-chip.tier-bad{color:var(--danger);border-color:rgba(239,68,68,0.3)}
+.dc-read{font-size:.82rem;color:var(--secondary);margin-top:.65rem;display:flex;gap:6px;align-items:flex-start;line-height:1.45}
+.dc-shion{display:flex;gap:8px;align-items:flex-start;margin-top:.7rem;padding-top:.65rem;border-top:0.5px dashed var(--accent-border-strong)}
+.dc-shion-av{font-size:1.05rem;flex-shrink:0;filter:drop-shadow(0 0 5px var(--neon-accent));line-height:1.5}
+.dc-shion-txt{font-size:.85rem;line-height:1.5;color:var(--text)}
+.dc-shion-label{font-size:.7rem;color:var(--accent);font-weight:700;margin-right:5px;background:var(--accent-glow);padding:2px 6px;border-radius:6px}
 
 /* 详情抽屉 */
 .drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;opacity:0;pointer-events:none;transition:opacity var(--transition);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
@@ -428,6 +455,7 @@ body::after{content:'';position:fixed;bottom:-20%;right:-10%;width:50%;height:50
     <p class="hero-sub">按更新日期分组，看看每天有什么可追</p>
   </div>
   <div class="main">
+    <div id="todayWatchingBanner" class="today-watching" hidden></div>
     <div class="schedule-wrap" id="scheduleWrap"><div class="message"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
   </div>
 </div>
@@ -1286,11 +1314,52 @@ async function loadRanking(){
 }
 
 // ===== 新番 =====
+// ===== 今日在追更新提醒 =====
+let lastCalendar=null;
+const SHION_UPDATE_LINES=[
+  '哼，你追的番今天更新了，别又拖到忘了。',
+  '更新日到了，紫音可没有提醒第二遍的习惯。',
+  '今天有得看了，看完记得回来标进度——别装死。',
+  '又更新了，准时蹲点的样子还挺像样的嘛。',
+  '别愣着，你的番在等你呢。看完再走。',
+  '更新了哦。我才不是特地提醒你的，顺便而已。',
+  '今天该追的别落下，紫音盯着呢。'
+];
+function getTodayWatching(cal){
+  if(!cal||!USE_WORKER_API)return[];
+  const today=new Date().getDay()||7;
+  const day=cal.find(d=>d.weekday&&d.weekday.id===today);
+  const items=(day&&day.items)||[];
+  const tracker=getTracker();
+  return items.filter(a=>{const e=tracker[a.id];return e&&e.status==='watching';});
+}
+function renderTodayWatching(cal){
+  const box=document.getElementById('todayWatchingBanner');
+  if(!box)return;
+  const list=getTodayWatching(cal);
+  if(!list.length){box.hidden=true;box.innerHTML='';return;}
+  const line=SHION_UPDATE_LINES[new Date().getDay()%SHION_UPDATE_LINES.length];
+  const cards=list.map(a=>{
+    const img=(a.images?.common||a.images?.medium||a.images?.grid||'').replace(/^http:/,'https:');
+    return`<button class="tw-card" data-id="${a.id}"><img src="${img}" loading="lazy" alt=""/><span class="tw-card-title">${a.name_cn||a.name}</span></button>`;
+  }).join('');
+  box.innerHTML=`<div class="tw-head"><span class="tw-icon">🔔</span><span class="tw-title">你在追的 <b>${list.length}</b> 部今天更新</span><span class="tw-shion">${line}</span></div><div class="tw-strip">${cards}</div>`;
+  box.hidden=false;
+  box.querySelectorAll('.tw-card').forEach(c=>{
+    const id=parseInt(c.dataset.id);
+    const a=list.find(x=>x.id===id);
+    c.addEventListener('pointerdown',()=>prefetchAnime(id),{passive:true,once:true});
+    c.addEventListener('click',()=>{if(a)openDrawer(a);});
+  });
+}
+
 async function loadSchedule(){
   const wrap=document.getElementById('scheduleWrap');
   wrap.innerHTML='<div class="message"><div class="loading-dots"><span></span><span></span><span></span></div></div>';
   try{
     const cal=await fetchCalendar();
+    lastCalendar=cal;
+    renderTodayWatching(cal);
     const today=new Date().getDay()||7;
     const sorted=[...cal].sort((a,b)=>{
       if(a.weekday.id===today)return -1;
@@ -1452,6 +1521,50 @@ function updateDrawerQuickBtn(id){
   btn.innerHTML=entry?(STATUS_ICONS[entry.status]||'♥'):'♡';
 }
 
+// ===== 决策卡：聚合数据 3 秒判断「追不追」 =====
+function dcScoreTier(s){
+  if(!s)return null;
+  if(s>=8.5)return{cls:'tier-god',label:'神作级'};
+  if(s>=7.5)return{cls:'tier-good',label:'良作'};
+  if(s>=6)return{cls:'tier-mid',label:'中规中矩'};
+  return{cls:'tier-bad',label:'谨慎入坑'};
+}
+function dcEpsLabel(eps){
+  if(!eps)return null;
+  if(eps<=13)return`${eps}集 · 一季补完`;
+  if(eps<=26)return`${eps}集 · 两季承诺`;
+  if(eps<40)return`${eps}集 · 中长篇`;
+  return`${eps}集 · 长篇大坑`;
+}
+function dcDistributionRead(count){
+  if(!count)return null;
+  let total=0,low=0,high=0;
+  for(let i=1;i<=10;i++){const v=count[i]||0;total+=v;if(i<=4)low+=v;if(i>=8)high+=v;}
+  if(total<30)return null; // 样本太少不下结论，避免误导
+  const lowR=low/total,highR=high/total;
+  if(highR>=0.15&&lowR>=0.15)return'评分两极，要么封神要么劝退，自己掂量。';
+  if(highR>=0.6)return'好评一边倒，闭眼追问题不大。';
+  if(lowR>=0.4)return'差评扎堆，下坑前先做好心理准备。';
+  return null;
+}
+function buildDecisionCard(d){
+  const score=(d.rating&&d.rating.score)||d.score||0;
+  const tier=dcScoreTier(score);
+  const eps=d.eps||d.total_episodes||0;
+  const epsL=dcEpsLabel(eps);
+  const chips=[];
+  chips.push(tier?`<span class="dc-chip ${tier.cls}">⭐ ${score.toFixed(1)} ${tier.label}</span>`:`<span class="dc-chip tier-mid">⭐ 暂无评分</span>`);
+  if(epsL)chips.push(`<span class="dc-chip">📺 ${epsL}</span>`);
+  chips.push(`<span class="dc-chip">${d.is_airing?'🟢 连载中':'✅ 已完结'}</span>`);
+  const read=dcDistributionRead(d.rating&&d.rating.count);
+  const review=(d.shion_review||'').trim();
+  let html=`<div class="decision-card"><div class="dc-chips">${chips.join('')}</div>`;
+  if(read)html+=`<div class="dc-read">📊 <span>${read}</span></div>`;
+  if(review)html+=`<div class="dc-shion"><span class="dc-shion-av">🔮</span><span class="dc-shion-txt"><span class="dc-shion-label">紫音锐评</span>${esc(review)}</span></div>`;
+  html+=`</div>`;
+  return html;
+}
+
 async function openDrawer(a){
   currentDetailAnime=a;
   const bg=document.getElementById('drawerBg');
@@ -1487,6 +1600,7 @@ async function openDrawer(a){
       <div class="drawer-title">${title}</div>
       <div class="drawer-subtitle">${sub}</div>
       <div class="drawer-tags">${tags}</div>
+      ${buildDecisionCard(d)}
       ${buildTrackSection(d)}
       ${ratingHtml}
       <div class="char-section" id="charSection" style="display:none"></div>
@@ -1656,6 +1770,7 @@ function switchView(view){
   if(view==='hot'&&!document.getElementById('hotGrid').querySelector('.card'))loadHot();
   if(view==='ranking'&&!document.getElementById('rankGrid').querySelector('.card'))loadRanking();
   if(view==='schedule'&&!document.getElementById('scheduleWrap').querySelector('.day-group'))loadSchedule();
+  else if(view==='schedule'&&lastCalendar)renderTodayWatching(lastCalendar);
   if(view==='my')renderMyPage();
   history.replaceState(null,'','#'+view);
 }

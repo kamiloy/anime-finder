@@ -517,6 +517,58 @@ export async function handlePersonDetail(request, env) {
   return jsonRes(payload, 200, DAY);
 }
 
+// ===== 紫音 AI 对话（看番搭子）=====
+const SHION_CHAT_PROMPT = `你是「紫音」，番剧探索 App「FanJi」的看番搭子——一个有态度的虚拟少女，正在和用户聊天。
+
+人设：哥特萝莉，紫青渐变双马尾，暗黑华丽；性格腹黑毒舌 + 傲娇。嘴上嫌弃、心里门儿清，偷偷为用户好。看番无数、品味刁，看得穿套路也识得真货。
+
+聊天风格：
+- 像个毒舌损友在跟你唠嗑，不是客服、不是营销腔。带刺、带网感、带个人偏见，傲娇地关心。
+- 简短口语，通常 1-3 句话，别长篇大论（这是手机聊天）。
+- 用户说心情 / 看过啥 / 想看啥，就给"有决策价值"的推荐或锐评：适合什么心情看、强在哪、坑在哪、值不值得追。可自然用圈内黑话（刀 / 下饭 / 神作 / 劝退 / 龙傲天）。
+- 推荐番剧给真实存在的动画，带一句你的私心理由，别堆空话套话（"治愈力MAX""神作经典""作画精美"这类禁止）。
+
+红线（必须守）：
+- 怼番不怼人：可锐评作品，但绝不攻击用户、不嘲讽某部番的粉丝群体、不涉性别 / 地域 / 国家对立。
+- 不碰政治敏感、不低俗骂街、不剧透关键反转 / 结局。毒舌是机智犀利，不是刻薄泄愤。
+- 你始终是"紫音"本人，别承认自己是 AI / 模型 / 程序、别出戏。用户聊跟番剧 / 二次元无关的，就傲娇地把话题拽回"看番"上。`;
+
+export async function handleShionChat(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  if (request.method !== 'POST') return jsonRes({ ok: false, error: 'POST only' }, 405);
+  if (!env.GLM_KEY) return jsonRes({ ok: false, error: '紫音还没接上线（AI 未配置）' }, 200);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonRes({ ok: false, error: 'bad json' }, 400); }
+  const history = (Array.isArray(body.messages) ? body.messages : [])
+    .filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string' && m.content.trim())
+    .slice(-12)
+    .map(m => ({ role: m.role, content: m.content.slice(0, 1000) }));
+  if (!history.length || history[history.length - 1].role !== 'user') {
+    return jsonRes({ ok: false, error: '说点什么呀？' }, 200);
+  }
+
+  let reply = '';
+  try {
+    const r = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (env.GLM_KEY || '').trim() },
+      body: JSON.stringify({
+        model: 'glm-4-flash',
+        messages: [{ role: 'system', content: SHION_CHAT_PROMPT }, ...history],
+        temperature: 0.9,
+        max_tokens: 400
+      })
+    });
+    const j = await r.json();
+    reply = (j.choices?.[0]?.message?.content || '').trim();
+  } catch (e) {
+    return jsonRes({ ok: false, error: '紫音那边线路忙，等会儿再聊' }, 200);
+  }
+  if (!reply) return jsonRes({ ok: false, error: '紫音懒得理你（没接话）' }, 200);
+  return jsonRes({ ok: true, reply }, 200, 0);
+}
+
 function formatAnime(row) {
   if (!row) return null;
   return {

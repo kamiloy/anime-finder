@@ -432,6 +432,14 @@ img.img-fade.loaded{opacity:1}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
 .toast-undo{color:var(--accent);cursor:pointer;font-weight:600;font-size:13px;border:none;background:none;padding:2px 0;white-space:nowrap}
 
+/* 紫音即时反应气泡 */
+.shion-react{position:fixed;left:50%;bottom:calc(var(--bottom-nav-h) + var(--safe-bot) + 20px);transform:translateX(-50%) translateY(24px) scale(.92);z-index:320;display:flex;align-items:center;gap:10px;max-width:min(86vw,420px);padding:11px 15px 11px 11px;border-radius:18px;background:linear-gradient(135deg,rgba(32,22,58,0.97),rgba(20,16,40,0.97));border:1px solid var(--accent-border-strong);box-shadow:0 10px 36px rgba(168,85,247,0.28);opacity:0;pointer-events:none;transition:opacity .32s cubic-bezier(0.16,1,0.3,1),transform .32s cubic-bezier(0.16,1,0.3,1);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.shion-react.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+.sr-face{flex-shrink:0;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.25rem;background:radial-gradient(circle at 50% 38%,rgba(168,85,247,0.4),rgba(6,182,212,0.16));border:1px solid var(--accent-border-strong);filter:drop-shadow(0 0 6px var(--neon-accent))}
+.sr-text{font-size:.86rem;line-height:1.45;color:var(--text);min-width:0}
+.sr-name{font-size:.64rem;color:var(--accent);font-weight:700;letter-spacing:.05em;display:block;margin-bottom:1px}
+@media (prefers-reduced-motion:reduce){.shion-react{transition:opacity .2s}.shion-react.show{transform:translateX(-50%)}}
+
 /* iOS 安装提示 */
 .ios-install-tip{position:fixed;bottom:calc(var(--bottom-nav-h) + var(--safe-bot) + 12px);left:12px;right:12px;background:var(--bg3);border:0.5px solid var(--accent);border-radius:var(--radius-lg);padding:12px 14px;z-index:90;display:none;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.5)}
 .ios-install-tip.show{display:flex}
@@ -653,6 +661,7 @@ img.img-fade.loaded{opacity:1}
 
 <div class="scanlines"></div>
 <div class="toast" id="toast"></div>
+<div class="shion-react" id="shionReact"></div>
 <input type="file" id="importFile" accept=".json" style="display:none"/>
 
 <script>
@@ -1311,7 +1320,7 @@ function bindCards(grid,items){
       const entry=getEntry(id);
       if(!entry){
         setStatus(a,'wish');
-        showToast('加入想看 🔖');
+        shionReact('wish');
       }else if(entry.status==='wish'){
         const undoEntry=getEntry(id);
         const undoAnime=a;
@@ -1657,10 +1666,10 @@ function wireTrackListeners(anime){
       const current=getEntry(anime.id);
       if(current?.status===s){
         setStatus(anime,null);
-        showToast('已移除追番');
+        shionReact('remove');
       }else{
         setStatus(anime,s,current?.progress||0);
-        showToast(`已标记「${STATUS_LABELS[s]}」`);
+        shionReact(s);
       }
       if(navigator.vibrate)navigator.vibrate(10);
       refreshTrackUI(anime);
@@ -1694,7 +1703,7 @@ function wireTrackListeners(anime){
         st.textContent=i<r?'★':'☆';
         st.classList.toggle('active',i<r);
       });
-      showToast(`已打 ${r} 分 ⭐`);
+      shionReact(rateReactKey(r));
     });
   });
 }
@@ -1708,6 +1717,10 @@ function refreshTrackUI(anime){
   if(epsRow){
     epsRow.style.display=entry?.status==='watching'?'flex':'none';
     document.getElementById('epsNum').textContent=entry?.progress||0;
+  }
+  const ratingRow=document.getElementById('ratingRow');
+  if(ratingRow){
+    ratingRow.style.display=(entry?.status==='watched'||entry?.status==='watching')?'flex':'none';
   }
 }
 
@@ -1835,10 +1848,10 @@ document.getElementById('drawerTrackQuick').addEventListener('click',()=>{
   const entry=getEntry(id);
   if(!entry){
     setStatus(currentDetailAnime,'wish');
-    showToast('加入想看 🔖');
+    shionReact('wish');
   }else if(entry.status==='wish'){
     setStatus(currentDetailAnime,null);
-    showToast('已移除');
+    shionReact('remove');
   }else{
     showToast(`当前状态「${STATUS_LABELS[entry.status]}」`);
     return;
@@ -2103,6 +2116,32 @@ function showToast(msg,onUndo){
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>t.classList.remove('show'),onUndo?4000:2000);
 }
+
+// ===== 紫音即时反应：对评分/弃番/追番动作弹人格气泡（复用状态栏情绪谱😏😒😠💢，纯文字、零运行时AI）=====
+const SHION_REACT={
+  rate_god :{e:'😏',lines:['哟，眼光不错嘛，这分我承认。','9分起步？算你识货。','高分伺候，这才像看番的样子。']},
+  rate_good:{e:'😏',lines:['良作没跑，这分给得挺中肯。','嗯，不亏，这分实诚。']},
+  rate_mid :{e:'😒',lines:['中规中矩，你也挺纠结的吧。','不上不下，懂，我也这感觉。']},
+  rate_bad :{e:'😠',lines:['这么低？看来是真踩雷了，辛苦你。','打这么狠，是被伤到了哈。','我就说吧，这番不太行。']},
+  wish     :{e:'😏',lines:['先码着，别又躺收藏夹吃灰。','想看就想看，记得是真去看啊。']},
+  watching :{e:'😏',lines:['开追了？那就别半途而废。','在看了，进度自己标，别问我看到哪。']},
+  watched  :{e:'✨',lines:['看完啦，给你鼓个掌——记得打分。','通关！这一部没白看吧？']},
+  hold     :{e:'😒',lines:['搁置了？这坑你迟早得回来填。','先放放也行，别忘了就成。']},
+  dropped  :{e:'😏',lines:['弃了？我早提醒过你的。','果断弃，省下的时间是赚的。','弃番不丢人，硬撑才丢人。']},
+  remove   :{e:'😒',lines:['不追了？随你。','移了就移了，别回头后悔。']}
+};
+let srTimer;
+function shionReact(key){
+  const r=SHION_REACT[key];
+  if(!r)return;
+  const line=r.lines[Math.floor(Math.random()*r.lines.length)];
+  const box=document.getElementById('shionReact');
+  box.innerHTML=`<span class="sr-face">${r.e}</span><span class="sr-text"><span class="sr-name">紫音</span>${esc(line)}</span>`;
+  box.classList.add('show');
+  clearTimeout(srTimer);
+  srTimer=setTimeout(()=>box.classList.remove('show'),2800);
+}
+function rateReactKey(r){return r>=9?'rate_god':r>=7?'rate_good':r>=5?'rate_mid':'rate_bad';}
 
 // ===== 推荐系统 =====
 const REC_MIN_FAVS=3;

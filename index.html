@@ -94,6 +94,27 @@ body::after{content:'';position:fixed;bottom:-25%;right:-12%;width:54%;height:54
 .main{max-width:1100px;margin:0 auto;padding:0 1rem 2rem}
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
 .section-title{font-size:15px;font-weight:500;color:var(--text)}
+/* 紫音主场 hero（热门首屏，不对称编辑式 + 立绘破框） */
+.hero-shion{position:relative;overflow:hidden}
+.hero-shion-art{position:absolute;top:-6px;right:-14px;width:min(48%,240px);height:auto;z-index:0;pointer-events:none;user-select:none;-webkit-user-select:none;-webkit-mask-image:radial-gradient(125% 108% at 80% 20%,#000 40%,transparent 80%);mask-image:radial-gradient(125% 108% at 80% 20%,#000 40%,transparent 80%);filter:drop-shadow(0 10px 32px rgba(168,85,247,0.4));animation:heroArtIn .85s cubic-bezier(0.16,1,0.3,1) both}
+@keyframes heroArtIn{from{opacity:0;transform:translateY(-12px) scale(1.05)}to{opacity:1;transform:none}}
+.hero-shion-copy{position:relative;z-index:2;max-width:72%}
+.hero-kicker{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--accent);margin-bottom:10px;text-shadow:0 0 12px var(--neon-accent)}
+.hero-title{font-family:var(--font-heading);font-size:clamp(36px,12vw,66px);font-weight:800;line-height:.96;letter-spacing:-1.5px;margin-bottom:14px}
+.hero-title span{background:linear-gradient(100deg,var(--accent),var(--secondary),var(--accent));background-size:200% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradientShift 5s ease infinite}
+.hero-rule{width:46px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--secondary));margin-bottom:13px;box-shadow:0 0 12px var(--neon-accent)}
+.hero-quote{font-size:13.5px;line-height:1.5;color:var(--text2);margin-bottom:var(--space-4);max-width:30ch;cursor:pointer}
+.hero-quote .hq-mark{color:var(--accent);font-weight:700}
+.hero-quote b{display:block;margin-top:3px;color:var(--text3);font-weight:600;font-size:11.5px;letter-spacing:.04em}
+.hero-shion .hero-actions{position:relative;z-index:2}
+@media (min-width:560px){
+  .hero-shion-art{width:min(40%,320px)}
+  .hero-shion-copy{max-width:62%}
+}
+@media (prefers-reduced-motion:reduce){
+  .hero-shion-art{animation:none}
+  .hero-title span{animation:none}
+}
 .count-badge{font-size:12px;color:var(--text3);background:var(--bg3);padding:3px 10px;border-radius:99px}
 
 .view{display:none}
@@ -497,9 +518,17 @@ img.img-fade.loaded{opacity:1}
 
 <!-- 热门 -->
 <div class="view active" id="view-hot">
-  <div class="hero">
-    <h1>发现你的下一部<span>好番</span></h1>
-    <p class="hero-sub">来自 Bangumi 的真实评分 · 你的二次元探索基地</p>
+  <div class="hero hero-shion">
+    <img class="hero-shion-art" src="shion-hero.png" alt="" aria-hidden="true"/>
+    <div class="hero-shion-copy">
+      <div class="hero-kicker">✦ 紫音主场</div>
+      <h1 class="hero-title">今天<br><span>看哪部？</span></h1>
+      <div class="hero-rule"></div>
+      <p class="hero-quote" id="heroQuote">
+        <span class="hq-mark">「</span><span id="heroQuoteText">哼，挑番交给我，你负责看就行。</span><span class="hq-mark">」</span>
+        <b>— 紫音 · 你的看番搭子</b>
+      </p>
+    </div>
     <div class="hero-actions">
       <div class="filters-wrap" id="tagFilters">
         <span class="filter-tag active" data-val="">综合热门</span>
@@ -2406,8 +2435,26 @@ const hash=location.hash.slice(1);
 if(['hot','ranking','schedule','my','favorites','discover'].includes(hash)){
   switchView(hash==='favorites'?'my':hash);
 }else{
-  switchView('schedule');
+  switchView('hot');
 }
+// ===== 紫音主场 hero 开场白（点一下换一句）=====
+const HERO_QUOTES=[
+  '哼，挑番交给我，你负责看就行。',
+  '今天想看点什么？说不出来就听我的。',
+  '别在收藏夹里养灰了，挑一部现在就看。',
+  '眼光这东西，跟着我学就对了。',
+  '来都来了，让我帮你找部值得的。',
+  '犹豫就是浪费生命，番我都替你筛好了。',
+  '又来了？算你识货，坐下我给你推。'
+];
+function setHeroQuote(){
+  const el=document.getElementById('heroQuoteText');
+  if(!el)return;
+  let q;do{q=HERO_QUOTES[Math.floor(Math.random()*HERO_QUOTES.length)];}while(q===el.textContent&&HERO_QUOTES.length>1);
+  el.textContent=q;
+}
+document.getElementById('heroQuote')?.addEventListener('click',setHeroQuote);
+setHeroQuote();
 showShionSplash();
 </script>
 </body>

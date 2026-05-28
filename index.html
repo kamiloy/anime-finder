@@ -2437,7 +2437,7 @@ if(['hot','ranking','schedule','my','favorites','discover'].includes(hash)){
 }else{
   switchView('hot');
 }
-// ===== 紫音主场 hero 开场白（点一下换一句）=====
+// ===== 紫音主场 hero 开场白（结合时段 + 今日在追更新；点一下换一句）=====
 const HERO_QUOTES=[
   '哼，挑番交给我，你负责看就行。',
   '今天想看点什么？说不出来就听我的。',
@@ -2447,14 +2447,43 @@ const HERO_QUOTES=[
   '犹豫就是浪费生命，番我都替你筛好了。',
   '又来了？算你识货，坐下我给你推。'
 ];
+// 返回当前情境下的台词池：优先"今日在追更新"，否则时段问候 + 通用语录
+function heroQuoteLines(){
+  const upd=(lastCalendar)?getTodayWatching(lastCalendar):[];
+  if(upd.length){
+    const t=upd[0].name_cn||upd[0].name;
+    if(upd.length===1)return[
+      `《${t}》今天更新了，还不去看？`,
+      `你追的《${t}》出新的了，看完记得回来标进度。`,
+      `《${t}》更新日到了，紫音可不提醒第二遍。`
+    ];
+    return[
+      `你追的 ${upd.length} 部今天更新了，《${t}》打头，别拖到忘。`,
+      `今天有 ${upd.length} 部在等你，紫音都帮你盯着呢。`,
+      `${upd.length} 部更新了哦，挑一部现在就看。`
+    ];
+  }
+  const h=new Date().getHours();
+  let tod;
+  if(h<5)tod=['都几点了还不睡？看完这集就关灯。','深夜放毒最香，紫音陪你看一部。'];
+  else if(h<11)tod=['早。今天想看点什么？说不出来就听我的。','一日之计在于晨，补番也算。'];
+  else if(h<18)tod=['下午了，挑一部轻松的配茶？','摸鱼时间到，紫音给你推一部。'];
+  else tod=['忙完了吧？犒劳自己，挑一部。','晚上了，正是看番的好时候。'];
+  return [...tod,...HERO_QUOTES];
+}
 function setHeroQuote(){
   const el=document.getElementById('heroQuoteText');
   if(!el)return;
-  let q;do{q=HERO_QUOTES[Math.floor(Math.random()*HERO_QUOTES.length)];}while(q===el.textContent&&HERO_QUOTES.length>1);
+  const lines=heroQuoteLines();
+  let q;do{q=lines[Math.floor(Math.random()*lines.length)];}while(q===el.textContent&&lines.length>1);
   el.textContent=q;
 }
 document.getElementById('heroQuote')?.addEventListener('click',setHeroQuote);
 setHeroQuote();
+// 懒加载日历，让开场白能播报"今日在追更新"（命中 SW/API 缓存，不阻塞首屏）
+if(USE_WORKER_API&&!lastCalendar){
+  fetchCalendar().then(cal=>{if(cal){lastCalendar=cal;setHeroQuote();}}).catch(()=>{});
+}
 showShionSplash();
 </script>
 </body>

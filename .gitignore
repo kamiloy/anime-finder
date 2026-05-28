@@ -12,4 +12,5 @@ worker/seed-*.sql
 worker/expand-checkpoint.json
 worker/expand-*.sql
 worker/expand-chunks/
+worker/refresh-*.sql
 

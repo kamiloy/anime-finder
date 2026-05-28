@@ -192,6 +192,57 @@ img.img-fade.loaded{opacity:1}
 .dc-shion-txt{font-size:.85rem;line-height:1.5;color:var(--text)}
 .dc-shion-label{font-size:.7rem;color:var(--accent);font-weight:700;margin-right:5px;background:var(--accent-glow);padding:2px 6px;border-radius:6px}
 
+/* 发现页：心情/场景找番 */
+.bn-discover .bn-icon svg{filter:drop-shadow(0 0 4px var(--neon-accent))}
+.disc-section{margin-bottom:1.8rem}
+.disc-section-head{display:flex;align-items:baseline;gap:.5rem;margin-bottom:.9rem;flex-wrap:wrap}
+.disc-section-icon{font-size:1.05rem;filter:drop-shadow(0 0 6px var(--neon-accent))}
+.disc-section-title{font-family:var(--font-heading);font-weight:700;font-size:1.05rem;color:var(--text)}
+.disc-section-sub{font-size:.76rem;color:var(--text3)}
+.disc-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
+.disc-tiles.wide{grid-template-columns:1fr}
+.disc-tile{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:.3rem;text-align:left;padding:.85rem .8rem;border-radius:var(--radius-lg);border:0.5px solid var(--accent-border-strong);background:linear-gradient(150deg,rgba(22,22,42,0.9),rgba(15,15,26,0.75));cursor:pointer;font-family:inherit;color:var(--text);transition:transform var(--transition),border-color var(--transition),box-shadow var(--transition);animation:discTileIn .45s cubic-bezier(0.16,1,0.3,1) both}
+.disc-tile::before{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(120% 80% at 80% 0%,rgba(168,85,247,0.14),transparent 60%);opacity:0;transition:opacity var(--transition);pointer-events:none}
+.disc-tile:hover,.disc-tile:active{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 8px 26px rgba(168,85,247,0.22)}
+.disc-tile:hover::before{opacity:1}
+.disc-tile-emoji{font-size:1.5rem;line-height:1.1}
+.disc-tile-label{font-weight:700;font-size:.92rem;letter-spacing:.02em}
+.disc-tile-intro{font-size:.7rem;line-height:1.4;color:var(--text2)}
+.disc-tile.gem{background:linear-gradient(150deg,rgba(168,85,247,0.16),rgba(6,182,212,0.06));border-color:var(--accent-border-strong);flex-direction:row;align-items:center;gap:.75rem}
+.disc-tile.gem .disc-tile-emoji{font-size:1.7rem;flex-shrink:0;filter:drop-shadow(0 0 8px var(--neon-accent))}
+.disc-tile.gem .disc-tile-body{display:flex;flex-direction:column;gap:.2rem}
+.disc-tile.gem .disc-tile-label{font-size:1rem}
+@keyframes discTileIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.disc-back{background:transparent;border:0.5px solid var(--accent-border-strong);color:var(--text2);padding:7px 14px;border-radius:99px;font-size:.8rem;cursor:pointer;font-family:inherit;margin-bottom:1rem;transition:all var(--transition)}
+.disc-back:hover{border-color:var(--accent);color:var(--text)}
+.disc-result-head{display:flex;gap:.7rem;align-items:flex-start;margin-bottom:1.1rem;padding:.95rem 1.05rem;border-radius:var(--radius-lg);background:linear-gradient(135deg,rgba(168,85,247,0.16),rgba(6,182,212,0.06));border:1px solid var(--accent-border-strong);box-shadow:0 0 24px rgba(168,85,247,0.12);animation:twIn .45s cubic-bezier(0.16,1,0.3,1) both}
+.disc-result-emoji{font-size:1.8rem;flex-shrink:0;line-height:1;filter:drop-shadow(0 0 8px var(--neon-accent))}
+.disc-result-txt{flex:1;min-width:0}
+.disc-result-label{font-family:var(--font-heading);font-weight:700;font-size:1.1rem;color:var(--text);margin-bottom:.2rem}
+.disc-result-intro{font-size:.82rem;line-height:1.5;color:var(--text2)}
+.disc-result-intro .disc-shion-tag{font-size:.68rem;color:var(--accent);font-weight:700;margin-right:5px;background:var(--accent-glow);padding:2px 6px;border-radius:6px;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){
+  .disc-tile,.disc-result-head{animation:none}
+  .disc-tile:hover,.disc-tile:active{transform:none}
+}
+/* 本周锐评：编辑版式锐评卡 */
+.review-list{display:flex;flex-direction:column;gap:.85rem}
+.review-card{display:flex;gap:.85rem;padding:.8rem;border-radius:var(--radius-lg);border:0.5px solid var(--accent-border-strong);background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(6,182,212,0.04));cursor:pointer;position:relative;overflow:hidden;transition:transform var(--transition),border-color var(--transition),box-shadow var(--transition);animation:discTileIn .45s cubic-bezier(0.16,1,0.3,1) both}
+.review-card:hover,.review-card:active{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 8px 26px rgba(168,85,247,0.2)}
+.rc-cover-wrap{flex:0 0 76px;width:76px;height:108px;border-radius:var(--radius);overflow:hidden;background:var(--bg3)}
+.rc-cover{width:100%;height:100%;object-fit:cover}
+.rc-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:.32rem}
+.rc-title{font-weight:700;font-size:.95rem;color:var(--text);line-height:1.3}
+.rc-meta{display:flex;gap:.6rem;align-items:center;font-size:.78rem}
+.rc-score{color:var(--warning);font-weight:700}
+.rc-year{color:var(--text3)}
+.rc-review{font-size:.82rem;line-height:1.55;color:var(--text)}
+.rc-quote{color:var(--accent);font-size:1.15rem;font-weight:700;margin-right:1px;vertical-align:-2px}
+@media (prefers-reduced-motion:reduce){
+  .review-card{animation:none}
+  .review-card:hover,.review-card:active{transform:none}
+}
+
 /* 详情抽屉 */
 .drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;opacity:0;pointer-events:none;transition:opacity var(--transition);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .drawer-bg.open{opacity:1;pointer-events:all}
@@ -504,6 +555,22 @@ img.img-fade.loaded{opacity:1}
   </div>
 </div>
 
+<!-- 发现（心情/场景） -->
+<div class="view" id="view-discover">
+  <div class="hero">
+    <h1>跟着<span>心情</span>找番</h1>
+    <p class="hero-sub">不看流派，看你今天想要什么 · 紫音替你挑</p>
+  </div>
+  <div class="main">
+    <div id="discoverLanding"><div class="message"><div class="loading-dots"><span></span><span></span><span></span></div></div></div>
+    <div id="discoverResults" hidden>
+      <button class="disc-back" id="discBack">← 换个心情</button>
+      <div class="disc-result-head" id="discResultHead"></div>
+      <div class="grid" id="discGrid"></div>
+    </div>
+  </div>
+</div>
+
 <!-- 详情抽屉 -->
 <div class="drawer-bg" id="drawerBg">
   <div class="drawer" id="drawer">
@@ -558,6 +625,10 @@ img.img-fade.loaded{opacity:1}
   <button class="bn-item" data-view="ranking">
     <div class="bn-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="12,6 14.5,10.5 19.5,11.5 16,15 16.5,20 12,18 7.5,20 8,15 4.5,11.5 9.5,10.5"/></svg></div>
     <div class="bn-label">排行</div>
+  </button>
+  <button class="bn-item bn-discover" data-view="discover">
+    <div class="bn-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="15.5,8.5 11,11 8.5,15.5 13,13"/></svg></div>
+    <div class="bn-label">发现</div>
   </button>
   <button class="bn-item" data-view="schedule">
     <div class="bn-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
@@ -1330,6 +1401,116 @@ async function loadRanking(){
   }
 }
 
+// ===== 发现：心情/场景找番 =====
+const DISCOVER_GROUPS=[
+  {title:'跟着心情',icon:'💜',sub:'今天想要什么感觉',items:[
+    {key:'m_heal', emoji:'🌿',label:'治愈',   intro:'被生活搓圆了？来点温的，专治班味和内耗。'},
+    {key:'m_cry',  emoji:'🔪',label:'致郁刀',  intro:'想哭一场就对了，纸巾自备，别怪我没提醒。'},
+    {key:'m_blood',emoji:'🔥',label:'热血燃',  intro:'肾上腺素拉满，看完想原地起立那种。'},
+    {key:'m_sweet',emoji:'🍬',label:'恋爱糖',  intro:'甜到齁，单身狗自备血糖仪。'},
+    {key:'m_funny',emoji:'🤪',label:'沙雕',   intro:'不用动脑，笑出腹肌，纯解压。'},
+    {key:'m_chill',emoji:'🍜',label:'下饭',   intro:'边吃边看刚好，无脑爽，关脑子看。'},
+    {key:'m_emo',  emoji:'🌌',label:'EMO后劲', intro:'看完缓不过来，后劲贼大，慎入。'},
+    {key:'m_scene',emoji:'✨',label:'名场面',  intro:'作画演出封神，光这些就值回票价。'},
+    {key:'m_brain',emoji:'🧠',label:'烧脑',   intro:'智商不在线别点，费脑子但上头。'},
+  ]},
+  {title:'挑个场合',icon:'⏳',sub:'看你有多少时间',items:[
+    {key:'s_oneseason',emoji:'📺',label:'一季补完',intro:'13集内，周末就能刷完，零负担。'},
+    {key:'s_airing',   emoji:'🟢',label:'当季新番',intro:'正在更新，追了好和人聊。'},
+    {key:'s_long',     emoji:'🏔️',label:'长篇大坑',intro:'40集起跳，入坑需谨慎。'},
+    {key:'s_classic',  emoji:'🏆',label:'老番补课',intro:'欠了多年的神作，该还债了。'},
+  ]},
+  {title:'紫音带你挖宝',icon:'🔮',sub:'别人懒得给你看的',accent:true,items:[
+    {key:'t_gem',          emoji:'💎',label:'冷门遗珠',     intro:'分高人少，识货的才点得开。'},
+    {key:'t_controversial',emoji:'⚔️',label:'争议之作',     intro:'要么封神要么劝退，敢不敢赌？'},
+    {key:'t_trap',         emoji:'🚧',label:'避雷·名不副实',intro:'火归火，紫音劝你三思再入坑。'},
+  ]},
+  {title:'紫音钦点',icon:'👑',sub:'她亲自翻的牌',accent:true,items:[
+    {key:'c_pick',  emoji:'💜',label:'紫音私藏',intro:'我私心收着的，闭眼入不亏。'},
+    {key:'c_weekly',emoji:'📜',label:'本周锐评',intro:'这周翻到的，听我两句再决定。',render:'review',limit:8,seed:true},
+  ]},
+];
+const DISCOVER_MAP=Object.fromEntries(DISCOVER_GROUPS.flatMap(g=>g.items.map(it=>[it.key,it])));
+
+function weekSeed(){return Math.floor(Date.now()/6.048e8);} // 周序号(自epoch)，本周锐评的确定性轮换种子
+async function fetchDiscover(key,opts={}){
+  if(USE_WORKER_API){
+    try{
+      const params={key,limit:opts.limit||30};
+      if(opts.seed!=null)params.seed=opts.seed;
+      const d=await apiFetch('/api/discover',{params});
+      return d.data||[];
+    }catch(e){killWorker();}
+  }
+  return null; // 发现依赖自建 D1（mood_tags/评分分布），无 Bangumi 等价回退
+}
+// 锐评卡：封面 + 大字紫音锐评（本周锐评专用编辑版式，适合截图）
+function reviewCardHtml(a){
+  const img=imgSrc(a.images?.common||a.images?.medium||a.images?.grid||'');
+  const s=a.rating?.score||a.score;
+  const score=s?`★ ${s.toFixed(1)}`:'';
+  const year=a.date?a.date.slice(0,4):'';
+  const review=(a.shion_review||'').trim();
+  return`<div class="review-card" data-id="${a.id}">
+    <div class="rc-cover-wrap"><img class="rc-cover img-fade" src="${img}" loading="lazy" onload="imgLoaded(this)" alt=""/></div>
+    <div class="rc-body">
+      <div class="rc-title">${a.name_cn||a.name}</div>
+      <div class="rc-meta">${score?`<span class="rc-score">${score}</span>`:''}${year?`<span class="rc-year">${year}</span>`:''}</div>
+      ${review?`<div class="rc-review"><span class="rc-quote">“</span>${esc(review)}</div>`:''}
+    </div>
+  </div>`;
+}
+function bindReviewCards(box,items){
+  box.querySelectorAll('.review-card').forEach((c,i)=>{
+    c.style.animationDelay=`${i*0.06}s`;
+    addRipple(c);
+    c.addEventListener('pointerdown',()=>prefetchAnime(items[i]&&items[i].id),{passive:true,once:true});
+    c.addEventListener('click',()=>openDrawer(items[i]));
+  });
+}
+
+let _discRendered=false;
+function loadDiscover(){
+  if(_discRendered)return;
+  const wrap=document.getElementById('discoverLanding');
+  wrap.innerHTML=DISCOVER_GROUPS.map(g=>{
+    const tiles=g.items.map(it=>g.accent
+      ?`<button class="disc-tile gem" data-key="${it.key}"><span class="disc-tile-emoji">${it.emoji}</span><span class="disc-tile-body"><span class="disc-tile-label">${it.label}</span><span class="disc-tile-intro">${it.intro}</span></span></button>`
+      :`<button class="disc-tile" data-key="${it.key}"><span class="disc-tile-emoji">${it.emoji}</span><span class="disc-tile-label">${it.label}</span><span class="disc-tile-intro">${it.intro}</span></button>`
+    ).join('');
+    return`<div class="disc-section"><div class="disc-section-head"><span class="disc-section-icon">${g.icon}</span><span class="disc-section-title">${g.title}</span><span class="disc-section-sub">${g.sub}</span></div><div class="disc-tiles${g.accent?' wide':''}">${tiles}</div></div>`;
+  }).join('');
+  wrap.querySelectorAll('.disc-tile').forEach((t,i)=>{
+    t.style.animationDelay=`${i*0.03}s`;
+    addRipple(t);
+    t.addEventListener('click',()=>openMood(t.dataset.key));
+  });
+  _discRendered=true;
+}
+
+async function openMood(key){
+  const it=DISCOVER_MAP[key];
+  if(!it)return;
+  document.getElementById('discoverLanding').hidden=true;
+  document.getElementById('discoverResults').hidden=false;
+  document.getElementById('discResultHead').innerHTML=`<span class="disc-result-emoji">${it.emoji}</span><div class="disc-result-txt"><div class="disc-result-label">${it.label}</div><div class="disc-result-intro"><span class="disc-shion-tag">紫音</span>${it.intro}</div></div>`;
+  const isReview=it.render==='review';
+  const g=document.getElementById('discGrid');
+  g.className=isReview?'review-list':'grid';
+  g.innerHTML=skeletonGrid(6);
+  window.scrollTo({top:0,behavior:'smooth'});
+  const data=await fetchDiscover(key,{limit:it.limit,seed:it.seed?weekSeed():null});
+  if(data===null){g.innerHTML=mascotEmpty('发现功能要联网才好使…<br/>等会儿再来？');return;}
+  if(!data.length){g.innerHTML=mascotEmpty('这个心情下暂时没挖到番…<br/>换一个试试？');return;}
+  if(isReview){g.innerHTML=data.map(reviewCardHtml).join('');bindReviewCards(g,data);}
+  else{g.innerHTML=data.map(a=>cardHtml(a)).join('');bindCards(g,data);}
+}
+function resetDiscover(){
+  document.getElementById('discoverResults').hidden=true;
+  document.getElementById('discoverLanding').hidden=false;
+}
+document.getElementById('discBack').addEventListener('click',()=>{resetDiscover();window.scrollTo({top:0,behavior:'smooth'});});
+
 // ===== 新番 =====
 // ===== 今日在追更新提醒 =====
 let lastCalendar=null;
@@ -1784,6 +1965,7 @@ function switchView(view){
   document.getElementById('view-'+view).classList.add('active');
   document.querySelectorAll('.bn-item').forEach(t=>t.classList.toggle('active',t.dataset.view===view));
   window.scrollTo({top:0,behavior:'smooth'});
+  if(view==='discover'){resetDiscover();loadDiscover();}
   if(view==='hot'&&!document.getElementById('hotGrid').querySelector('.card'))loadHot();
   if(view==='ranking'&&!document.getElementById('rankGrid').querySelector('.card'))loadRanking();
   if(view==='schedule'&&!document.getElementById('scheduleWrap').querySelector('.day-group'))loadSchedule();
@@ -2110,7 +2292,7 @@ document.getElementById('iosTipClose').addEventListener('click',()=>{
 migrateFromFavorites();
 updateMyBadge();
 const hash=location.hash.slice(1);
-if(['hot','ranking','schedule','my','favorites'].includes(hash)){
+if(['hot','ranking','schedule','my','favorites','discover'].includes(hash)){
   switchView(hash==='favorites'?'my':hash);
 }else{
   switchView('schedule');

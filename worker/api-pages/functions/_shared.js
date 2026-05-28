@@ -261,6 +261,99 @@ export async function handleTags(request, env) {
   return jsonRes({ ok: true, data: results || [] });
 }
 
+// 心情/场景发现：按情绪标签 / 场景时长 / 挖宝策略聚合番剧
+const MOOD_KEYS = {
+  m_heal: '治愈', m_cry: '致郁', m_chill: '下饭', m_blood: '燃', m_sweet: '甜',
+  m_funny: '沙雕', m_emo: 'EMO后劲', m_scene: '名场面', m_brain: '烧脑'
+};
+
+export async function handleDiscover(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const params = new URL(request.url).searchParams;
+  const key = params.get('key') || '';
+  const limit = Math.min(60, Math.max(1, parseInt(params.get('limit')) || 30));
+
+  let sql, bindings;
+  // 假分过滤：很多未上映/占位条目挂着 score=10 但几乎无人评分，按分排序会把它们顶上来。
+  // 给按分排序的维度加「评分人数下限」(JOIN rating_counts)，只露真有评分量的番。
+  if (MOOD_KEYS[key]) {
+    // mood_tags 存为 JSON 数组字符串，如 ["治愈","下饭"]；匹配带引号的精确标签避免子串误命中
+    sql = `SELECT a.* FROM anime a JOIN rating_counts rc ON a.id = rc.anime_id
+           WHERE a.mood_tags LIKE ? AND rc.total_count >= 100 ORDER BY a.score DESC LIMIT ?`;
+    bindings = [`%"${MOOD_KEYS[key]}"%`, limit];
+  } else if (key === 's_oneseason') {
+    sql = `SELECT a.* FROM anime a JOIN rating_counts rc ON a.id = rc.anime_id
+           WHERE a.total_episodes BETWEEN 1 AND 13 AND rc.total_count >= 100 ORDER BY a.score DESC LIMIT ?`;
+    bindings = [limit];
+  } else if (key === 's_long') {
+    sql = `SELECT a.* FROM anime a JOIN rating_counts rc ON a.id = rc.anime_id
+           WHERE a.total_episodes >= 40 AND rc.total_count >= 100 ORDER BY a.score DESC LIMIT ?`;
+    bindings = [limit];
+  } else if (key === 's_airing') {
+    sql = `SELECT a.* FROM anime a JOIN rating_counts rc ON a.id = rc.anime_id
+           WHERE a.is_airing = 1 AND rc.total_count >= 30 ORDER BY a.score DESC LIMIT ?`;
+    bindings = [limit];
+  } else if (key === 's_classic') {
+    sql = `SELECT a.* FROM anime a JOIN rating_counts rc ON a.id = rc.anime_id
+           WHERE a.air_date != '' AND a.air_date < '2016-01-01' AND rc.total_count >= 100 AND a.score >= 8.3
+           ORDER BY a.score DESC LIMIT ?`;
+    bindings = [limit];
+  } else if (key === 't_gem') {
+    // 冷门遗珠：高分 × 评分人数少（识货才点）
+    sql = `SELECT a.* FROM anime a JOIN rating_counts rc ON a.id = rc.anime_id
+           WHERE a.score >= 7.8 AND rc.total_count BETWEEN 80 AND 1800
+           ORDER BY a.score DESC LIMIT ?`;
+    bindings = [limit];
+  } else if (key === 't_controversial') {
+    // 争议之作：高分票与低分票同时占一定比例（两极分化）
+    sql = `SELECT a.* FROM anime a JOIN rating_counts rc ON a.id = rc.anime_id
+           WHERE rc.total_count >= 120
+             AND (rc.score_8 + rc.score_9 + rc.score_10) * 1.0 / rc.total_count >= 0.10
+             AND (rc.score_1 + rc.score_2 + rc.score_3 + rc.score_4) * 1.0 / rc.total_count >= 0.12
+           ORDER BY rc.total_count DESC LIMIT ?`;
+    bindings = [limit];
+  } else if (key === 't_trap') {
+    // 避雷·名不副实：人气高（评分人数多）但评分偏低
+    sql = `SELECT a.* FROM anime a JOIN rating_counts rc ON a.id = rc.anime_id
+           WHERE rc.total_count >= 800 AND a.score > 0 AND a.score < 6.5
+           ORDER BY rc.total_count DESC LIMIT ?`;
+    bindings = [limit];
+  } else if (key === 'c_pick') {
+    // 紫音私藏：高分 + 有锐评 + 有热度，她的私心收藏
+    sql = `SELECT a.* FROM anime a JOIN rating_counts rc ON a.id = rc.anime_id
+           WHERE a.score >= 8.3 AND a.shion_review != '' AND rc.total_count >= 300
+           ORDER BY a.score DESC LIMIT ?`;
+    bindings = [limit];
+  } else if (key === 'c_weekly') {
+    // 本周锐评：周级确定性伪随机（同一周 seed 不变→选番稳定，跨周轮换），无需后端定时任务
+    const seed = parseInt(params.get('seed')) || 0;
+    sql = `SELECT a.* FROM anime a JOIN rating_counts rc ON a.id = rc.anime_id
+           WHERE a.score >= 7.8 AND a.shion_review != '' AND rc.total_count >= 500
+           ORDER BY ((a.id + ?) * 2654435761) % 100000 LIMIT ?`;
+    bindings = [seed, limit];
+  } else {
+    return jsonRes({ ok: false, error: 'unknown discover key', data: [] }, 400);
+  }
+
+  const { results } = await env.DB.prepare(sql).bind(...bindings).all();
+
+  // 附标签（与 handleAnimeList 同模式，卡片显示流派 pill）
+  const ids = (results || []).map(r => r.id);
+  let tagMap = {};
+  if (ids.length) {
+    const { results: tagResults } = await env.DB.prepare(
+      `SELECT at2.anime_id, t.name, t.name_cn, t.count FROM anime_tags at2 JOIN tags t ON at2.tag_id = t.id WHERE at2.anime_id IN (${ids.map(() => '?').join(',')})`
+    ).bind(...ids).all();
+    for (const tr of tagResults || []) {
+      if (!tagMap[tr.anime_id]) tagMap[tr.anime_id] = [];
+      tagMap[tr.anime_id].push({ name: tr.name, name_cn: tr.name_cn, count: tr.count });
+    }
+  }
+
+  const data = (results || []).map(r => ({ ...formatAnime(r), tags: tagMap[r.id] || [] }));
+  return jsonRes({ ok: true, data, key }, 200, 3600);
+}
+
 export async function handleAnimeCharacters(request, env) {
   if (request.method === 'OPTIONS') return corsRes();
   const url = new URL(request.url);

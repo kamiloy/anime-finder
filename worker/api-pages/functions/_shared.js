@@ -180,9 +180,23 @@ export async function handleAnimeSearch(request, env) {
   ).bind(searchTerm, searchTerm, searchTerm).first();
   const total = countResult ? countResult.total : 0;
 
+  // 相关度排序：精确名(3) > 前缀(2) > 子串(1)；同档按评分人数(rating_counts)兜底，
+  // 把 score=10 但几乎无人评分的占位/同名烂番压到后面，避免它们盖过真正相关的热门番。
+  const qExact = q.trim();
+  const qPrefix = `${q.trim()}%`;
   const { results } = await env.DB.prepare(
-    'SELECT * FROM anime WHERE title LIKE ? OR title_cn LIKE ? OR title_jp LIKE ? ORDER BY score DESC LIMIT ? OFFSET ?'
-  ).bind(searchTerm, searchTerm, searchTerm, limit, offset).all();
+    `SELECT a.*,
+       (CASE
+          WHEN a.title_cn = ? OR a.title = ? OR a.title_jp = ? THEN 3
+          WHEN a.title_cn LIKE ? OR a.title LIKE ? OR a.title_jp LIKE ? THEN 2
+          ELSE 1
+        END) AS rel
+     FROM anime a
+     LEFT JOIN rating_counts rc ON a.id = rc.anime_id
+     WHERE a.title LIKE ? OR a.title_cn LIKE ? OR a.title_jp LIKE ?
+     ORDER BY rel DESC, COALESCE(rc.total_count, 0) DESC, a.score DESC
+     LIMIT ? OFFSET ?`
+  ).bind(qExact, qExact, qExact, qPrefix, qPrefix, qPrefix, searchTerm, searchTerm, searchTerm, limit, offset).all();
 
   const data = results.map(formatAnime);
   return jsonRes({ ok: true, data, total, page, limit });

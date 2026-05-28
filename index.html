@@ -293,7 +293,15 @@ img.img-fade.loaded{opacity:1}
 .sp-enter{position:relative;z-index:2;margin-top:.95rem;font-family:inherit;font-weight:700;font-size:.9rem;color:#fff;background:linear-gradient(135deg,var(--accent),var(--secondary));border:none;border-radius:99px;padding:.6rem 1.7rem;cursor:pointer;box-shadow:0 8px 22px rgba(168,85,247,0.5);transition:transform var(--transition)}
 .sp-enter:hover,.sp-enter:active{transform:translateY(-2px)}
 .sp-skip{position:absolute;top:10px;right:14px;z-index:3;font-size:1.1rem;color:rgba(255,255,255,0.6);background:none;border:none;cursor:pointer;line-height:1;padding:4px}
-@media (prefers-reduced-motion:reduce){.sp-card{transition:opacity .3s}.sp-glow{animation:none}}
+/* 开屏内容错峰入场，避免一次性全弹出显得生硬 */
+@keyframes spArtIn{from{opacity:0;transform:translateY(10px) scale(1.07)}to{opacity:1;transform:none}}
+@keyframes spItemUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes spEnterPulse{0%,100%{box-shadow:0 8px 22px rgba(168,85,247,0.5)}50%{box-shadow:0 10px 30px rgba(168,85,247,0.85)}}
+.shion-splash.show .sp-art{animation:spArtIn .72s cubic-bezier(0.16,1,0.3,1) .06s both}
+.shion-splash.show .sp-brand{animation:spItemUp .55s cubic-bezier(0.16,1,0.3,1) .26s both}
+.shion-splash.show .sp-bubble{animation:spItemUp .55s cubic-bezier(0.16,1,0.3,1) .40s both}
+.shion-splash.show .sp-enter{animation:spItemUp .55s cubic-bezier(0.16,1,0.3,1) .54s both,spEnterPulse 2.4s ease-in-out 1.6s infinite}
+@media (prefers-reduced-motion:reduce){.sp-card{transition:opacity .3s}.sp-glow,.shion-splash.show .sp-art,.shion-splash.show .sp-brand,.shion-splash.show .sp-bubble,.shion-splash.show .sp-enter{animation:none}}
 
 /* 详情抽屉 */
 .drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;opacity:0;pointer-events:none;transition:opacity var(--transition);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}

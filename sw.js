@@ -1,6 +1,6 @@
 // FanJi Service Worker - PWA 离线缓存
-const CACHE_VERSION = 'fanji-v14';
-const STATIC_CACHE = 'fanji-static-v13';
+const CACHE_VERSION = 'fanji-v15';
+const STATIC_CACHE = 'fanji-static-v14';
 const API_CACHE = 'fanji-api-v7';
 const IMG_CACHE = 'fanji-img-v7';
 

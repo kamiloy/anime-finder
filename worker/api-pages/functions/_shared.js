@@ -80,6 +80,7 @@ export async function handleImageProxy(context) {
 
 const CHAR_TTL = 30 * DAY * 1000;
 const PERSON_TTL = 7 * DAY * 1000;
+const EPS_TTL = 12 * 60 * 60 * 1000; // 集数列表 12h 刷新（连载中会增集，但"已更新第N集"由客户端按日期算，缓存可较长）
 
 // D1 响应缓存：命中且未过期则跳过 Bangumi 回源。任何异常都静默忽略，不影响主流程
 async function cacheGet(env, key, ttlMs) {
@@ -400,6 +401,38 @@ export async function handleAnimeCharacters(request, env) {
   const payload = { ok: true, data };
   await cacheSet(env, cacheKey, payload);
   return jsonRes(payload, 200, DAY);
+}
+
+// 集数级更新提醒：懒代理 Bangumi 本篇集数（type=0）。返回 {ep, airdate}，客户端按 airdate<=今天 算"已更新第N集"
+export async function handleAnimeEpisodes(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/anime\/(\d+)\/episodes$/);
+  if (!match) return jsonRes({ ok: false, error: 'Invalid ID' }, 400);
+  const id = parseInt(match[1]);
+
+  const anime = await env.DB.prepare('SELECT bangumi_id FROM anime WHERE id = ?').bind(id).first();
+  if (!anime || !anime.bangumi_id) return jsonRes({ ok: false, error: 'Anime not found', data: [] }, 404);
+
+  const cacheKey = 'eps:' + anime.bangumi_id;
+  const cached = await cacheGet(env, cacheKey, EPS_TTL);
+  if (cached) return jsonRes(cached, 200, 21600);
+
+  let raw;
+  try {
+    raw = await bgmFetch('/v0/episodes?subject_id=' + anime.bangumi_id + '&type=0&limit=100');
+  } catch (e) {
+    return jsonRes({ ok: false, error: 'upstream', data: [] }, 200, 60);
+  }
+
+  const data = (raw && Array.isArray(raw.data) ? raw.data : []).map(e => ({
+    ep: e.ep || e.sort || 0,
+    airdate: e.airdate || '',
+    name: e.name_cn || e.name || ''
+  }));
+  const payload = { ok: true, data };
+  await cacheSet(env, cacheKey, payload);
+  return jsonRes(payload, 200, 21600);
 }
 
 const CAREER_CN = { seiyu: '声优', mangaka: '漫画家', artist: '艺术家', writer: '作家', illustrator: '插画家', actor: '演员', producer: '制作人', director: '导演', musician: '音乐人' };

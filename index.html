@@ -147,7 +147,7 @@ body::after{content:'';position:fixed;bottom:-25%;right:-12%;width:54%;height:54
 .view.active{display:block;animation:viewIn 0.34s cubic-bezier(0.16,1,0.3,1) both}
 @keyframes viewIn{from{opacity:0;transform:translateX(var(--vx,16px))}to{opacity:1;transform:translateX(0)}}
 @media (prefers-reduced-motion:reduce){
-  body::before,body::after,.logo-dot,.hero h1 span,.mascot-svg,.mascot-art{animation:none}
+  body::before,body::after,.logo-dot,.hero h1 span,.mascot-art{animation:none}
   .view.active,.card{animation:none}
 }
 
@@ -524,7 +524,6 @@ img.img-fade.loaded{opacity:1}
 
 /* ===== 吉祥物 + 气泡 ===== */
 .mascot-block{display:flex;flex-direction:column;align-items:center;gap:10px;padding:2rem 1rem;grid-column:1/-1}
-.mascot-svg{width:140px;height:auto;filter:drop-shadow(0 10px 28px rgba(168,85,247,0.35));animation:mascotFloat 4s ease-in-out infinite}
 .mascot-art{width:154px;height:auto;border-radius:16px;filter:drop-shadow(0 12px 30px rgba(168,85,247,0.42));animation:mascotFloat 4s ease-in-out infinite;-webkit-mask-image:radial-gradient(125% 108% at 50% 34%,#000 56%,transparent 90%);mask-image:radial-gradient(125% 108% at 50% 34%,#000 56%,transparent 90%)}
 @keyframes mascotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .speech-bubble{background:var(--bg3);border:0.5px solid rgba(168,85,247,0.3);border-radius:16px;border-bottom-left-radius:4px;padding:10px 16px;font-size:13px;color:var(--text2);line-height:1.6;text-align:center;max-width:220px;position:relative}
@@ -839,38 +838,6 @@ img.img-fade.loaded{opacity:1}
 
 <script>
 // ===== 吉祥物：紫音 Shion（简约矢量风 · B站22娘同款）=====
-const SHION_SVG=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260">
-  <defs><linearGradient id="hGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#7c3aed"/><stop offset="50%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
-  <ellipse cx="100" cy="250" rx="42" ry="5" fill="rgba(168,85,247,0.12)"/>
-  <path d="M60,105 Q26,130 22,175 Q18,208 32,224 Q38,230 42,220 Q48,202 58,167 Q65,142 72,117 Z" fill="#7c3aed"/>
-  <path d="M140,105 Q174,130 178,175 Q182,208 168,224 Q162,230 158,220 Q152,202 142,167 Q135,142 128,117 Z" fill="#06b6d4"/>
-  <path d="M32,224 Q36,212 38,192 Q42,168 48,164 Z" fill="#6d28d9" opacity="0.6"/>
-  <path d="M168,224 Q164,212 162,192 Q158,168 152,164 Z" fill="#0891b2" opacity="0.6"/>
-  <circle cx="60" cy="110" r="5" fill="#e9d5ff"/><circle cx="140" cy="110" r="5" fill="#cffafe"/>
-  <path d="M68,165 Q64,200 58,248 L142,248 Q136,200 132,165 Z" fill="#1e1040"/>
-  <path d="M78,168 Q100,175 122,168 L118,248 L82,248 Z" fill="#2d1555"/>
-  <path d="M72,164 Q100,180 128,164 L120,172 Q100,188 80,172 Z" fill="#f0e0ff" opacity="0.8"/>
-  <ellipse cx="100" cy="164" rx="4" ry="3" fill="#a855f7"/>
-  <rect x="90" y="142" width="20" height="24" fill="#f0d5c0" rx="6"/>
-  <ellipse cx="100" cy="100" rx="46" ry="52" fill="#ffe4d0"/>
-  <path d="M54,92 Q52,60 62,38 Q75,12 100,8 Q125,12 138,38 Q148,60 146,92 Q130,70 100,65 Q70,70 54,92 Z" fill="#7c3aed"/>
-  <path d="M54,92 Q56,72 66,55 Q78,38 90,36 L90,55 Q78,58 66,72 Q58,84 56,94 Z" fill="#a855f7"/>
-  <path d="M146,92 Q144,72 134,55 Q122,38 110,36 L110,55 Q122,58 134,72 Q142,84 144,94 Z" fill="#06b6d4"/>
-  <path d="M64,62 Q74,38 90,34 Q95,32 100,33 Q105,32 110,34 Q126,38 136,62 Q122,50 100,48 Q78,50 64,62 Z" fill="url(#hGrad)"/>
-  <ellipse cx="78" cy="98" rx="10" ry="13" fill="#1a0630"/>
-  <ellipse cx="122" cy="98" rx="10" ry="13" fill="#1a0630"/>
-  <ellipse cx="82" cy="93" rx="4.5" ry="5.5" fill="#fff"/>
-  <ellipse cx="126" cy="93" rx="4.5" ry="5.5" fill="#fff"/>
-  <circle cx="77" cy="100" r="2" fill="#fff"/><circle cx="121" cy="100" r="2" fill="#fff"/>
-  <path d="M67,89 Q72,85 78,87" fill="none" stroke="#1a0630" stroke-width="2.2" stroke-linecap="round"/>
-  <path d="M122,87 Q128,85 133,89" fill="none" stroke="#1a0630" stroke-width="2.2" stroke-linecap="round"/>
-  <ellipse cx="64" cy="110" rx="7" ry="4.5" fill="#ffb3b3" opacity="0.4"/>
-  <ellipse cx="136" cy="110" rx="7" ry="4.5" fill="#ffb3b3" opacity="0.4"/>
-  <path d="M95,114 Q100,120 105,114" fill="none" stroke="#e8a090" stroke-width="1.8" stroke-linecap="round"/>
-  <g transform="translate(90, 32) rotate(-10)"><rect x="-6" y="-8" width="12" height="13" rx="3" fill="#a855f7"/><rect x="-6" y="-8" width="12" height="13" rx="3" fill="none" stroke="#fff" stroke-width="1.2"/><text x="0" y="1" font-family="sans-serif" font-size="6" fill="#fff" text-anchor="middle" font-weight="700">FJ</text></g>
-  <path d="M66,48 Q70,52 68,56" fill="none" stroke="#c084fc" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
-  <path d="M132,50 Q130,53 132,57" fill="none" stroke="#67e8f9" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
-</svg>`;
 
 function mascotImg(){
   return`<img class="mascot-art" src="shion-hero.png" alt="紫音"/>`;

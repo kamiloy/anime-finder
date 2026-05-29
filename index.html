@@ -147,7 +147,7 @@ body::after{content:'';position:fixed;bottom:-25%;right:-12%;width:54%;height:54
 .view.active{display:block;animation:viewIn 0.34s cubic-bezier(0.16,1,0.3,1) both}
 @keyframes viewIn{from{opacity:0;transform:translateX(var(--vx,16px))}to{opacity:1;transform:translateX(0)}}
 @media (prefers-reduced-motion:reduce){
-  body::before,body::after,.logo-dot,.hero h1 span,.mascot-svg{animation:none}
+  body::before,body::after,.logo-dot,.hero h1 span,.mascot-svg,.mascot-art{animation:none}
   .view.active,.card{animation:none}
 }
 
@@ -525,6 +525,7 @@ img.img-fade.loaded{opacity:1}
 /* ===== 吉祥物 + 气泡 ===== */
 .mascot-block{display:flex;flex-direction:column;align-items:center;gap:10px;padding:2rem 1rem;grid-column:1/-1}
 .mascot-svg{width:140px;height:auto;filter:drop-shadow(0 10px 28px rgba(168,85,247,0.35));animation:mascotFloat 4s ease-in-out infinite}
+.mascot-art{width:154px;height:auto;border-radius:16px;filter:drop-shadow(0 12px 30px rgba(168,85,247,0.42));animation:mascotFloat 4s ease-in-out infinite;-webkit-mask-image:radial-gradient(125% 108% at 50% 34%,#000 56%,transparent 90%);mask-image:radial-gradient(125% 108% at 50% 34%,#000 56%,transparent 90%)}
 @keyframes mascotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .speech-bubble{background:var(--bg3);border:0.5px solid rgba(168,85,247,0.3);border-radius:16px;border-bottom-left-radius:4px;padding:10px 16px;font-size:13px;color:var(--text2);line-height:1.6;text-align:center;max-width:220px;position:relative}
 .speech-bubble::before{content:'';position:absolute;bottom:100%;left:28px;border:8px solid transparent;border-bottom-color:rgba(168,85,247,0.3)}
@@ -872,10 +873,10 @@ const SHION_SVG=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260">
 </svg>`;
 
 function mascotImg(){
-  return`<div class="mascot-svg">${SHION_SVG}</div>`;
+  return`<img class="mascot-art" src="shion-hero.png" alt="紫音"/>`;
 }
-function mascotSVGDataURI(){
-  return'data:image/svg+xml,'+encodeURIComponent(SHION_SVG);
+function mascotImgSrc(){
+  return'shion-hero.png';
 }
 
 // 骨架屏 HTML
@@ -1031,7 +1032,7 @@ async function generateAnimeCard(d,entry){
   ctx.fillStyle=lg;ctx.font=SHARE_FONT(800,52);ctx.fillText('FanJi 番迹',96,fy+86);
   ctx.fillStyle='#8888aa';ctx.font=SHARE_FONT(400,30);ctx.fillText('发现你的下一部好番',96,fy+138);
   try{
-    const m=await loadImageEl(mascotSVGDataURI(),false);
+    const m=await loadImageEl(mascotImgSrc(),false);
     const mh=170,mw=mh*(m.width/m.height),mx=W-80-mw,my=fy+34;
     ctx.save();roundRect(ctx,mx,my,mw,mh,16);ctx.clip();ctx.drawImage(m,mx,my,mw,mh);ctx.restore();
     ctx.save();roundRect(ctx,mx,my,mw,mh,16);ctx.lineWidth=2;ctx.strokeStyle='rgba(168,85,247,0.45)';ctx.stroke();ctx.restore();
@@ -1057,7 +1058,7 @@ async function generateStatsCard(){
   // 紫音主视觉
   let topY=200;
   try{
-    const m=await loadImageEl(mascotSVGDataURI(),false);
+    const m=await loadImageEl(mascotImgSrc(),false);
     const mh=300,mw=mh*(m.width/m.height),mx=(W-mw)/2,my=96;
     ctx.save();ctx.shadowColor='rgba(168,85,247,0.55)';ctx.shadowBlur=52;ctx.shadowOffsetY=18;
     roundRect(ctx,mx,my,mw,mh,24);ctx.fillStyle='#000';ctx.fill();ctx.restore();
@@ -2400,7 +2401,7 @@ function showToast(msg,onUndo){
 
 // ===== 紫音即时反应：对评分/弃番/追番动作弹人格气泡（复用状态栏情绪谱😏😒😠💢，纯文字、零运行时AI）=====
 // ===== 紫音立绘表情（随状态切换；无对应图则保持默认立绘，零回归，出图后自动点亮）=====
-const SHION_FACES_READY=false; // 出好表情图(见 shion-redesign/face-prompts.md)后改 true 即点亮；false 时零请求零开销
+const SHION_FACES_READY=true; // 出好表情图(见 shion-redesign/face-prompts.md)后改 true 即点亮；false 时零请求零开销
 const SHION_FACE_DEFAULT='shion-hero.png';
 const SHION_FACE_FILES={smug:'shion-face-smug.png',pout:'shion-face-pout.png',angry:'shion-face-angry.png',happy:'shion-face-happy.png',rage:'shion-face-rage.png'};
 const EMOJI_FACE={'😏':'smug','😒':'pout','😠':'angry','✨':'happy','💢':'rage'};

@@ -1,20 +1,25 @@
 // FanJi Service Worker - PWA 离线缓存
-const CACHE_VERSION = 'fanji-v24';
-const STATIC_CACHE = 'fanji-static-v23';
+const CACHE_VERSION = 'fanji-v27';
+const STATIC_CACHE = 'fanji-static-v26';
 const API_CACHE = 'fanji-api-v7';
 const IMG_CACHE = 'fanji-img-v7';
 
 // 1x1 透明 GIF：图片网络失败时的占位，避免破图图标（也避免把网络错误伪装成误导性的 404）
 const TRANSPARENT_GIF = Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'), c => c.charCodeAt(0));
 
+// index.html 不进 STATIC_ASSETS，走 network-first（见 fetch 分支）
+// 因为它是「内核 + 内联 JS」全在里头的入口文档，缓存优先会让新版改动卡在旧 SW
 const STATIC_ASSETS = [
-  './',
-  './index.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
   './apple-touch-icon.png',
-  './shion-hero.png'
+  './shion-hero.png',
+  './community/api.js',
+  './community/auth.js',
+  './community/reviews.js',
+  './community/profile.js',
+  './community/feed.js'
 ];
 
 // 安装：缓存核心静态资源
@@ -89,7 +94,28 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 静态资源: 缓存优先
+  // HTML 入口文档（index.html / 根路径）：network-first
+  // 避免「装新 APK 后旧 SW 仍服旧 index.html」的经典 PWA 坑
+  const isHTML = request.mode === 'navigate' ||
+                 (request.destination === 'document') ||
+                 url.pathname === '/' ||
+                 url.pathname.endsWith('/index.html');
+  if (isHTML) {
+    event.respondWith(
+      fetch(request).then(res => {
+        if (res && res.ok) {
+          const clone = res.clone();
+          caches.open(STATIC_CACHE).then(c => c.put(request, clone));
+        }
+        return res;
+      }).catch(() => caches.match(request).then(c =>
+        c || caches.match('./index.html') || new Response('offline', { status: 503 })
+      ))
+    );
+    return;
+  }
+
+  // 其它静态资源（JS/manifest/icon 等）: 缓存优先
   event.respondWith(
     caches.match(request).then(cached => cached || fetch(request))
   );

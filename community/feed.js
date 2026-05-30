@@ -147,10 +147,27 @@
     G.refreshFeed();
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() { initCommunityTab(); if (G.onAuthChange) G.onAuthChange(G.currentUser); });
-  } else {
+  // 硬兜底：保证调 onAuthChange 时 currentUser 真的就位（不依赖 inline preheat 的浏览器时序）
+  function ensureUser() {
+    if (G.currentUser) return G.currentUser;
+    try {
+      var raw = localStorage.getItem('fanji_session');
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && s.token && s.user) { G.token = s.token; G.currentUser = s.user; return s.user; }
+      }
+    } catch(e) {}
+    return null;
+  }
+
+  function bootAuth() {
     initCommunityTab();
-    if (G.onAuthChange) G.onAuthChange(G.currentUser);
+    if (G.onAuthChange) G.onAuthChange(ensureUser());
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootAuth);
+  } else {
+    bootAuth();
   }
 })();

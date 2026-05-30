@@ -1335,6 +1335,16 @@ window.fanji={
   // showUserProfile 由 community/profile.js 设
   // loadReviewSection 由 community/reviews.js 设
 };
+// 同步从 localStorage 预热登录态：避免 community/auth.js 的异步 restore（Promise + setTimeout）
+// 与 community/feed.js 末尾的同步首次 onAuthChange 调用产生竞态——后者会拿到 currentUser=null
+// feed.js 的 ensureUser() 是硬兜底，preheat 是软优化
+try{
+  var _savedSess=localStorage.getItem('fanji_session');
+  if(_savedSess){
+    var _s=JSON.parse(_savedSess);
+    if(_s&&_s.token){window.fanji.token=_s.token;window.fanji.currentUser=_s.user;}
+  }
+}catch(e){}
 const BGM_BASE='https://api.bgm.tv';
 
 // 图片源：Bangumi 图床 lain.bgm.tv 在国内被阻断，经 CF 边缘代理（pages.dev 国内可达）；非 lain 链接原样返回

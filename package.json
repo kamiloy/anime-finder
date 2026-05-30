@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "FanJi 番剧探索 - 动漫发现 App",
   "scripts": {
-    "sync": "powershell -Command \"Copy-Item index.html,manifest.json,sw.js -Destination www -Force; Copy-Item *.png -Destination www -Force; if (Test-Path www/community) { Remove-Item -Recurse -Force www/community }; Copy-Item -Recurse community -Destination www/community -Force; if (Test-Path worker) { if (Test-Path www/worker) { Remove-Item -Recurse -Force www/worker }; Copy-Item -Recurse worker -Destination www/worker -Force }\" && npx cap sync android",
+    "build": "node scripts/build.mjs",
+    "build:prod": "node scripts/build.mjs --prod",
+    "sync": "npm run build && powershell -Command \"Copy-Item index.html,manifest.json,sw.js,main.bundle.js -Destination www -Force; Copy-Item *.png -Destination www -Force; if (Test-Path www/community) { Remove-Item -Recurse -Force www/community }; Copy-Item -Recurse community -Destination www/community -Force; if (Test-Path worker) { if (Test-Path www/worker) { Remove-Item -Recurse -Force www/worker }; Copy-Item -Recurse worker -Destination www/worker -Force }\" && npx cap sync android",
     "open:android": "npx cap open android",
-    "build": "npm run sync && npx cap open android"
+    "build:app": "npm run sync && npx cap open android"
   },
   "keywords": [],
   "author": "",
@@ -15,10 +17,13 @@
     "@capacitor/browser": "^8.0.3",
     "@capacitor/core": "^8.3.4",
     "@capacitor/preferences": "^8.0.1",
+    "gsap": "^3.15.0",
     "jimp": "^1.6.1"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.3.4",
-    "playwright": "^1.60.0"
+    "esbuild": "^0.28.0",
+    "playwright": "^1.60.0",
+    "typescript": "^6.0.3"
   }
 }

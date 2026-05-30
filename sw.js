@@ -1,6 +1,6 @@
 // FanJi Service Worker - PWA 离线缓存
-const CACHE_VERSION = 'fanji-v27';
-const STATIC_CACHE = 'fanji-static-v26';
+const CACHE_VERSION = 'fanji-v29';
+const STATIC_CACHE = 'fanji-static-v28';
 const API_CACHE = 'fanji-api-v7';
 const IMG_CACHE = 'fanji-img-v7';
 
@@ -15,11 +15,8 @@ const STATIC_ASSETS = [
   './icon-512.png',
   './apple-touch-icon.png',
   './shion-hero.png',
-  './community/api.js',
-  './community/auth.js',
-  './community/reviews.js',
-  './community/profile.js',
-  './community/feed.js'
+  './main.bundle.js',
+  './community/main.bundle.js'
 ];
 
 // 安装：缓存核心静态资源

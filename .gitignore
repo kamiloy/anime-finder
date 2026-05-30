@@ -14,3 +14,8 @@ worker/expand-*.sql
 worker/expand-chunks/
 worker/refresh-*.sql
 
+# esbuild 产物（每次 npm run build 重新生成）
+main.bundle.js
+community/main.bundle.js
+# 一次性实验脚本（spike / scratch）
+tools/bilibili-spike/

@@ -1,23 +1,26 @@
 // Shared handlers & utilities for FanJi API Pages Functions
+import { requireAuth } from './_auth.js';
 
-function corsRes() {
+function corsRes(methods = 'GET, POST, PUT, DELETE, OPTIONS') {
   return new Response(null, {
     status: 204,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
+      'Access-Control-Allow-Methods': methods,
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     }
   });
 }
 
 function jsonRes(data, status = 200, sMaxAge = 120) {
+  // 错误响应统一 no-store：避免 401/400/404 等被浏览器或边缘缓存（影响登录后的恢复体验）
+  const cacheControl = status >= 400 ? 'no-store' : `public, max-age=60, s-maxage=${sMaxAge}`;
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Access-Control-Allow-Origin': '*',
-      'Cache-Control': `public, max-age=60, s-maxage=${sMaxAge}`
+      'Cache-Control': cacheControl
     }
   });
 }
@@ -690,6 +693,491 @@ export async function handleShionChat(request, env) {
 
   return jsonRes({ ok: true, reply, cards: toolCards }, 200, 0);
 }
+
+// ===== 社区功能 =====
+
+// GET /api/review/:animeId — 获取番剧评价列表
+export async function handleReviewList(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/review\/(\d+)$/);
+  if (!match) return jsonRes({ ok: false, error: '无效ID' }, 400);
+  const animeId = parseInt(match[1]);
+  const page = Math.max(1, parseInt(url.searchParams.get('page')) || 1);
+  const limit = Math.min(30, Math.max(1, parseInt(url.searchParams.get('limit')) || 10));
+  const offset = (page - 1) * limit;
+
+  const { results } = await env.DB.prepare(
+    `SELECT r.id, r.rating, r.content, r.spoiler, r.created_at, r.updated_at,
+            u.id as user_id, u.username, u.nickname
+     FROM reviews r JOIN users u ON r.user_id = u.id
+     WHERE r.anime_id = ?
+     ORDER BY r.created_at DESC LIMIT ? OFFSET ?`
+  ).bind(animeId, limit, offset).all();
+
+  const total = (await env.DB.prepare(
+    'SELECT COUNT(*) as c FROM reviews WHERE anime_id = ?'
+  ).bind(animeId).first())?.c || 0;
+
+  // 社区均分
+  const avg = (await env.DB.prepare(
+    'SELECT AVG(rating) as avg, COUNT(*) as c FROM reviews WHERE anime_id = ?'
+  ).bind(animeId).first());
+
+  return jsonRes({
+    ok: true,
+    data: (results || []).map(r => ({
+      id: r.id, rating: r.rating, content: r.content, spoiler: !!r.spoiler,
+      created_at: r.created_at, updated_at: r.updated_at,
+      user: { id: r.user_id, username: r.username, nickname: r.nickname }
+    })),
+    total, page, limit,
+    stats: { avg: avg ? Math.round(avg.avg * 10) / 10 : 0, count: avg?.c || 0 }
+  });
+}
+
+// POST /api/review/:animeId — 发表/更新评价（需登录）
+export async function handleReviewCreate(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  if (request.method !== 'POST') return jsonRes({ ok: false, error: 'POST only' }, 405);
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/review\/(\d+)$/);
+  if (!match) return jsonRes({ ok: false, error: '无效ID' }, 400);
+  const animeId = parseInt(match[1]);
+
+  const user = await requireAuth(request, env);
+  if (!user) return jsonRes({ ok: false, error: '请先登录' }, 401);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonRes({ ok: false, error: '无效JSON' }, 400); }
+  const rating = Math.min(10, Math.max(1, parseInt(body.rating) || 0));
+  if (!rating) return jsonRes({ ok: false, error: '请评分 1-10' }, 400);
+  const content = (body.content || '').trim().slice(0, 200);
+  const spoiler = body.spoiler ? 1 : 0;
+
+  const exist = await env.DB.prepare(
+    'SELECT id FROM reviews WHERE user_id = ? AND anime_id = ?'
+  ).bind(user.id, animeId).first();
+
+  if (exist) {
+    await env.DB.prepare(
+      'UPDATE reviews SET rating = ?, content = ?, spoiler = ?, updated_at = datetime(\'now\') WHERE id = ?'
+    ).bind(rating, content, spoiler, exist.id).run();
+    return jsonRes({ ok: true, review: { id: exist.id, rating, content, spoiler: !!spoiler, updated: true } });
+  }
+
+  const result = await env.DB.prepare(
+    'INSERT INTO reviews (user_id, anime_id, rating, content, spoiler) VALUES (?, ?, ?, ?, ?)'
+  ).bind(user.id, animeId, rating, content, spoiler).run();
+
+  return jsonRes({
+    ok: true,
+    review: {
+      id: result.meta.last_row_id, rating, content, spoiler: !!spoiler,
+      created_at: new Date().toISOString(), user: { id: user.id, username: user.username, nickname: user.nickname }
+    }
+  }, 201);
+}
+
+// DELETE /api/review/:animeId — 删除评价（需登录）
+export async function handleReviewDelete(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  if (request.method !== 'DELETE') return jsonRes({ ok: false, error: 'DELETE only' }, 405);
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/review\/(\d+)$/);
+  if (!match) return jsonRes({ ok: false, error: '无效ID' }, 400);
+  const animeId = parseInt(match[1]);
+
+  const user = await requireAuth(request, env);
+  if (!user) return jsonRes({ ok: false, error: '请先登录' }, 401);
+
+  const r = await env.DB.prepare(
+    'DELETE FROM reviews WHERE user_id = ? AND anime_id = ?'
+  ).bind(user.id, animeId).run();
+  return jsonRes({ ok: true, deleted: r.meta.changes > 0 });
+}
+
+// GET /api/review/:animeId/mine — 获取当前用户对某番的评价（需登录）
+export async function handleReviewMine(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/review\/(\d+)\/mine$/);
+  if (!match) return jsonRes({ ok: false, error: '无效ID' }, 400);
+  const animeId = parseInt(match[1]);
+
+  const user = await requireAuth(request, env);
+  if (!user) return jsonRes({ ok: false, error: '请先登录' }, 401);
+
+  const row = await env.DB.prepare(
+    'SELECT id, rating, content, spoiler, created_at FROM reviews WHERE user_id = ? AND anime_id = ?'
+  ).bind(user.id, animeId).first();
+
+  // 不缓存：URL 不含 user id，CF 边缘按 URL key 缓存会跨用户串号
+  return jsonRes({ ok: true, review: row ? { ...row, spoiler: !!row.spoiler } : null }, 200, 0);
+}
+
+// GET /api/user/:id/profile — 用户主页
+export async function handleUserProfile(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/user\/(\d+)\/profile$/);
+  if (!match) return jsonRes({ ok: false, error: '无效ID' }, 400);
+  const userId = parseInt(match[1]);
+
+  const user = await env.DB.prepare(
+    'SELECT id, username, nickname, bio, created_at FROM users WHERE id = ?'
+  ).bind(userId).first();
+  if (!user) return jsonRes({ ok: false, error: '用户不存在' }, 404);
+
+  const stats = await env.DB.prepare(
+    `SELECT
+       (SELECT COUNT(*) FROM reviews WHERE user_id = ?) as reviews,
+       (SELECT COUNT(*) FROM follows WHERE follower_id = ?) as following,
+       (SELECT COUNT(*) FROM follows WHERE following_id = ?) as followers
+    `
+  ).bind(userId, userId, userId).first();
+
+  const recent = await env.DB.prepare(
+    `SELECT r.id, r.rating, r.content, r.spoiler, r.created_at,
+            a.id as anime_id, a.title, a.title_cn, a.cover_url
+     FROM reviews r JOIN anime a ON r.anime_id = a.id
+     WHERE r.user_id = ? ORDER BY r.created_at DESC LIMIT 5`
+  ).bind(userId).all();
+
+  return jsonRes({
+    ok: true,
+    user: { ...user, bio: user.bio || '' },
+    stats: stats || { reviews: 0, following: 0, followers: 0 },
+    recent: (recent?.results || []).map(r => ({
+      ...r, spoiler: !!r.spoiler,
+      anime: { id: r.anime_id, title: r.title_cn || r.title, cover_url: r.cover_url }
+    }))
+  });
+}
+
+// GET /api/user/:id/reviews — 用户评价列表
+export async function handleUserReviews(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/user\/(\d+)\/reviews$/);
+  if (!match) return jsonRes({ ok: false, error: '无效ID' }, 400);
+  const userId = parseInt(match[1]);
+  const page = Math.max(1, parseInt(url.searchParams.get('page')) || 1);
+  const limit = Math.min(30, Math.max(1, parseInt(url.searchParams.get('limit')) || 15));
+  const offset = (page - 1) * limit;
+
+  const total = (await env.DB.prepare(
+    'SELECT COUNT(*) as c FROM reviews WHERE user_id = ?'
+  ).bind(userId).first())?.c || 0;
+
+  const { results } = await env.DB.prepare(
+    `SELECT r.id, r.rating, r.content, r.spoiler, r.created_at,
+            a.id as anime_id, a.title, a.title_cn, a.cover_url, a.score
+     FROM reviews r JOIN anime a ON r.anime_id = a.id
+     WHERE r.user_id = ? ORDER BY r.created_at DESC LIMIT ? OFFSET ?`
+  ).bind(userId, limit, offset).all();
+
+  return jsonRes({
+    ok: true,
+    data: (results || []).map(r => ({
+      id: r.id, rating: r.rating, content: r.content, spoiler: !!r.spoiler, created_at: r.created_at,
+      anime: { id: r.anime_id, title: r.title_cn || r.title, cover_url: r.cover_url, score: r.score }
+    })),
+    total, page, limit
+  });
+}
+
+// GET /api/user/search?q= — 搜索用户
+export async function handleUserSearch(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const q = (new URL(request.url).searchParams.get('q') || '').trim();
+  if (!q) return jsonRes({ ok: true, data: [] });
+
+  const term = `%${q}%`;
+  const { results } = await env.DB.prepare(
+    'SELECT id, username, nickname, created_at FROM users WHERE username LIKE ? OR nickname LIKE ? LIMIT 20'
+  ).bind(term, term).all();
+
+  return jsonRes({ ok: true, data: results || [] });
+}
+
+// POST/DELETE /api/follow/:userId — 关注/取关（需登录）
+export async function handleFollow(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/follow\/(\d+)$/);
+  if (!match) return jsonRes({ ok: false, error: '无效ID' }, 400);
+  const targetId = parseInt(match[1]);
+
+  const user = await requireAuth(request, env);
+  if (!user) return jsonRes({ ok: false, error: '请先登录' }, 401);
+  if (user.id === targetId) return jsonRes({ ok: false, error: '不能关注自己' }, 400);
+
+  if (request.method === 'POST') {
+    await env.DB.prepare(
+      'INSERT OR IGNORE INTO follows (follower_id, following_id) VALUES (?, ?)'
+    ).bind(user.id, targetId).run();
+    return jsonRes({ ok: true, following: true });
+  }
+
+  if (request.method === 'DELETE') {
+    await env.DB.prepare(
+      'DELETE FROM follows WHERE follower_id = ? AND following_id = ?'
+    ).bind(user.id, targetId).run();
+    return jsonRes({ ok: true, following: false });
+  }
+
+  return jsonRes({ ok: false, error: 'POST or DELETE only' }, 405);
+}
+
+// GET /api/user/:id/followers — 粉丝列表
+export async function handleFollowers(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/user\/(\d+)\/followers$/);
+  if (!match) return jsonRes({ ok: false, error: '无效ID' }, 400);
+  const userId = parseInt(match[1]);
+
+  const { results } = await env.DB.prepare(
+    `SELECT u.id, u.username, u.nickname, f.created_at
+     FROM follows f JOIN users u ON f.follower_id = u.id
+     WHERE f.following_id = ? ORDER BY f.created_at DESC LIMIT 50`
+  ).bind(userId).all();
+
+  return jsonRes({ ok: true, data: results || [] });
+}
+
+// GET /api/user/:id/following — 关注列表
+export async function handleFollowing(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/user\/(\d+)\/following$/);
+  if (!match) return jsonRes({ ok: false, error: '无效ID' }, 400);
+  const userId = parseInt(match[1]);
+
+  const { results } = await env.DB.prepare(
+    `SELECT u.id, u.username, u.nickname, f.created_at
+     FROM follows f JOIN users u ON f.following_id = u.id
+     WHERE f.follower_id = ? ORDER BY f.created_at DESC LIMIT 50`
+  ).bind(userId).all();
+
+  return jsonRes({ ok: true, data: results || [] });
+}
+
+// GET /api/community/feed — 社区动态
+export async function handleFeed(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const url = new URL(request.url);
+  const page = Math.max(1, parseInt(url.searchParams.get('page')) || 1);
+  const limit = Math.min(20, Math.max(1, parseInt(url.searchParams.get('limit')) || 10));
+  const offset = (page - 1) * limit;
+
+  // 支持「关注」模式：传入 following=1 + Authorization 只看关注用户的动态
+  const following = url.searchParams.get('following') === '1';
+  let userId = null;
+  if (following) {
+    const user = await requireAuth(request, env);
+    if (user) userId = user.id;
+  }
+
+  let whereReviews = '';
+  let bindings = [limit, offset];
+  if (userId) {
+    whereReviews = `AND r.user_id IN (SELECT following_id FROM follows WHERE follower_id = ?)`;
+    bindings = [userId, limit, offset];
+  }
+
+  const { results } = await env.DB.prepare(
+    `SELECT 'review' as type, r.id, r.rating, r.content, r.spoiler, r.created_at,
+            u.id as user_id, u.username, u.nickname,
+            a.id as anime_id, a.title, a.title_cn, a.cover_url
+     FROM reviews r JOIN users u ON r.user_id = u.id JOIN anime a ON r.anime_id = a.id
+     ${whereReviews ? `WHERE 1=1 ${whereReviews}` : ''}
+     ORDER BY r.created_at DESC LIMIT ? OFFSET ?`
+  ).bind(...bindings).all();
+
+  // following=1 模式依赖 Authorization 但 URL 不区分用户 → 不缓存；公开模式可短缓存
+  return jsonRes({
+    ok: true,
+    data: (results || []).map(r => ({
+      type: r.type,
+      id: r.id,
+      rating: r.rating,
+      content: r.content,
+      spoiler: !!r.spoiler,
+      created_at: r.created_at,
+      user: { id: r.user_id, username: r.username, nickname: r.nickname },
+      anime: { id: r.anime_id, title: r.title_cn || r.title, cover_url: r.cover_url }
+    })),
+    page, limit
+  }, 200, following ? 0 : 30);
+}
+
+// POST/PUT /api/user/me/profile — 更新个人资料（需登录）
+export async function handleProfileUpdate(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const user = await requireAuth(request, env);
+  if (!user) return jsonRes({ ok: false, error: '请先登录' }, 401);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonRes({ ok: false, error: '无效JSON' }, 400); }
+  const nickname = (body.nickname || '').trim().slice(0, 30) || user.nickname;
+  const bio = (body.bio || '').trim().slice(0, 140);
+
+  await env.DB.prepare(
+    'UPDATE users SET nickname = ?, bio = ?, updated_at = datetime(\'now\') WHERE id = ?'
+  ).bind(nickname, bio, user.id).run();
+
+  // 写操作不缓存
+  return jsonRes({ ok: true, user: { id: user.id, username: user.username, nickname, bio } }, 200, 0);
+}
+
+// GET /api/community/stats — 社区总览统计
+export async function handleCommunityStats(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const users = (await env.DB.prepare('SELECT COUNT(*) as c FROM users').first())?.c || 0;
+  const reviews = (await env.DB.prepare('SELECT COUNT(*) as c FROM reviews').first())?.c || 0;
+  const threads = (await env.DB.prepare('SELECT COUNT(*) as c FROM threads').first())?.c || 0;
+  return jsonRes({ ok: true, stats: { users, reviews, threads } });
+}
+
+// ===== 讨论区 =====
+
+// GET /api/thread/:animeId — 番剧讨论帖列表
+export async function handleThreadList(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/thread\/(\d+)$/);
+  if (!match) return jsonRes({ ok: false, error: '无效ID' }, 400);
+  const animeId = parseInt(match[1]);
+  const page = Math.max(1, parseInt(url.searchParams.get('page')) || 1);
+  const limit = Math.min(30, Math.max(1, parseInt(url.searchParams.get('limit')) || 15));
+  const offset = (page - 1) * limit;
+
+  const total = (await env.DB.prepare('SELECT COUNT(*) as c FROM threads WHERE anime_id = ?').bind(animeId).first())?.c || 0;
+
+  const { results } = await env.DB.prepare(
+    `SELECT t.id, t.title, t.content, t.created_at, t.updated_at,
+            u.id as user_id, u.username, u.nickname,
+            (SELECT COUNT(*) FROM posts WHERE thread_id = t.id) as reply_count
+     FROM threads t JOIN users u ON t.user_id = u.id
+     WHERE t.anime_id = ? ORDER BY t.updated_at DESC LIMIT ? OFFSET ?`
+  ).bind(animeId, limit, offset).all();
+
+  return jsonRes({
+    ok: true,
+    data: (results || []).map(r => ({
+      id: r.id, title: r.title, content: r.content.slice(0, 120),
+      created_at: r.created_at, updated_at: r.updated_at, reply_count: r.reply_count,
+      user: { id: r.user_id, username: r.username, nickname: r.nickname }
+    })),
+    total, page, limit
+  });
+}
+
+// POST /api/thread/:animeId — 发帖（需登录）
+export async function handleThreadCreate(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  if (request.method !== 'POST') return jsonRes({ ok: false, error: 'POST only' }, 405);
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/thread\/(\d+)$/);
+  if (!match) return jsonRes({ ok: false, error: '无效ID' }, 400);
+  const animeId = parseInt(match[1]);
+
+  const user = await requireAuth(request, env);
+  if (!user) return jsonRes({ ok: false, error: '请先登录' }, 401);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonRes({ ok: false, error: '无效JSON' }, 400); }
+  const title = (body.title || '').trim().slice(0, 100);
+  const content = (body.content || '').trim().slice(0, 2000);
+  if (!title) return jsonRes({ ok: false, error: '请输入标题' }, 400);
+  if (!content) return jsonRes({ ok: false, error: '请输入内容' }, 400);
+
+  const result = await env.DB.prepare(
+    'INSERT INTO threads (anime_id, user_id, title, content) VALUES (?, ?, ?, ?)'
+  ).bind(animeId, user.id, title, content).run();
+
+  return jsonRes({
+    ok: true,
+    thread: {
+      id: result.meta.last_row_id, anime_id: animeId, title, content,
+      created_at: new Date().toISOString(),
+      user: { id: user.id, username: user.username, nickname: user.nickname }, reply_count: 0
+    }
+  }, 201);
+}
+
+// GET /api/thread/detail/:threadId — 帖子详情 + 回帖
+export async function handleThreadDetail(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/thread\/detail\/(\d+)$/);
+  if (!match) return jsonRes({ ok: false, error: '无效ID' }, 400);
+  const threadId = parseInt(match[1]);
+
+  const thread = await env.DB.prepare(
+    `SELECT t.id, t.anime_id, t.title, t.content, t.created_at,
+            u.id as user_id, u.username, u.nickname,
+            a.title as anime_title, a.title_cn as anime_title_cn
+     FROM threads t JOIN users u ON t.user_id = u.id JOIN anime a ON t.anime_id = a.id
+     WHERE t.id = ?`
+  ).bind(threadId).first();
+  if (!thread) return jsonRes({ ok: false, error: '帖子不存在' }, 404);
+
+  const { results: posts } = await env.DB.prepare(
+    `SELECT p.id, p.content, p.created_at, u.id as user_id, u.username, u.nickname
+     FROM posts p JOIN users u ON p.user_id = u.id
+     WHERE p.thread_id = ? ORDER BY p.created_at ASC LIMIT 100`
+  ).bind(threadId).all();
+
+  return jsonRes({
+    ok: true,
+    thread: {
+      id: thread.id, title: thread.title, content: thread.content, created_at: thread.created_at,
+      user: { id: thread.user_id, username: thread.username, nickname: thread.nickname },
+      anime: { id: thread.anime_id, title: thread.anime_title_cn || thread.anime_title }
+    },
+    posts: (posts || []).map(p => ({
+      id: p.id, content: p.content, created_at: p.created_at,
+      user: { id: p.user_id, username: p.username, nickname: p.nickname }
+    }))
+  });
+}
+
+// POST /api/thread/detail/:threadId — 回帖（需登录）
+export async function handlePostCreate(request, env) {
+  if (request.method === 'OPTIONS') return corsRes();
+  if (request.method !== 'POST') return jsonRes({ ok: false, error: 'POST only' }, 405);
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/api\/thread\/detail\/(\d+)$/);
+  if (!match) return jsonRes({ ok: false, error: '无效ID' }, 400);
+  const threadId = parseInt(match[1]);
+
+  const user = await requireAuth(request, env);
+  if (!user) return jsonRes({ ok: false, error: '请先登录' }, 401);
+
+  let body;
+  try { body = await request.json(); } catch { return jsonRes({ ok: false, error: '无效JSON' }, 400); }
+  const content = (body.content || '').trim().slice(0, 1000);
+  if (!content) return jsonRes({ ok: false, error: '请输入内容' }, 400);
+
+  const result = await env.DB.prepare(
+    'INSERT INTO posts (thread_id, user_id, content) VALUES (?, ?, ?)'
+  ).bind(threadId, user.id, content).run();
+
+  await env.DB.prepare('UPDATE threads SET updated_at = datetime(\'now\') WHERE id = ?').bind(threadId).run();
+
+  return jsonRes({
+    ok: true,
+    post: {
+      id: result.meta.last_row_id, content, created_at: new Date().toISOString(),
+      user: { id: user.id, username: user.username, nickname: user.nickname }
+    }
+  }, 201);
+}
+
+// ===== 辅助函数 =====
 
 function formatAnime(row) {
   if (!row) return null;

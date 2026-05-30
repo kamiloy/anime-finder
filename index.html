@@ -592,6 +592,131 @@ img.img-fade.loaded{opacity:1}
 .page-btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;box-sizing:border-box}
 .fav-btn::before{content:'';position:absolute;top:50%;left:50%;width:44px;height:44px;transform:translate(-50%,-50%);border-radius:50%;z-index:-1}
 .sp-skip,.sc-close,.share-close,.ios-install-tip-close{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
+/* ---- 社区 ---- */
+/* Auth 弹窗 */
+.auth-modal{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;transition:opacity var(--transition-slow)}
+.auth-modal.hidden{display:none}
+.auth-panel{background:var(--bg3);border:0.5px solid var(--accent-border-strong);border-radius:var(--radius-xl);padding:24px 20px;width:100%;max-width:340px;box-shadow:0 12px 40px rgba(0,0,0,0.5)}
+.auth-title{font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text);margin-bottom:16px}
+.auth-field{margin-bottom:12px}
+.auth-field label{display:block;font-size:13px;color:var(--text2);margin-bottom:4px}
+.auth-field input{width:100%;padding:10px 12px;background:var(--bg2);border:0.5px solid var(--accent-border);border-radius:var(--radius-sm);color:var(--text);font-size:15px;outline:none;transition:border var(--transition)}
+.auth-field input:focus{border-color:var(--accent)}
+.auth-nick-row{margin-bottom:12px}
+.auth-error{color:var(--danger);font-size:13px;margin-bottom:12px;min-height:18px}
+.auth-actions{display:flex;flex-direction:column;gap:8px}
+.auth-submit-btn{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;transition:all var(--transition)}
+.auth-submit-btn:active{filter:brightness(0.85)}
+.auth-switch-btn{background:none;border:none;color:var(--secondary);font-size:13px;cursor:pointer;padding:8px}
+/* 用户头像 */
+.profile-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--secondary));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0}
+/* Profile 面板 */
+.profile-panel{position:fixed;inset:0;z-index:350;background:var(--bg);overflow-y:auto;padding:calc(var(--safe-top) + 16px) 16px calc(var(--bottom-nav-h) + var(--safe-bot) + 60px);transition:transform var(--transition-slow);color:var(--text)}
+.profile-panel.hidden{display:none}
+.profile-loading,.profile-error,.profile-empty{text-align:center;color:var(--text2);padding:40px}
+.profile-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.profile-info{flex:1;min-width:0}
+.profile-name{font-family:var(--font-heading);font-size:18px;font-weight:700}
+.profile-username{font-size:13px;color:var(--text2)}
+.profile-bio{font-size:14px;color:var(--text2);margin-top:4px}
+.profile-joined{font-size:12px;color:var(--text3);margin-top:4px}
+.profile-follow-btn,.profile-edit-btn{padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0}
+.profile-stats{display:flex;gap:0;border:0.5px solid var(--accent-border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px}
+.profile-stat{flex:1;text-align:center;padding:12px 8px;border-right:0.5px solid var(--accent-border)}
+.profile-stat:last-child{border-right:none}
+.profile-stat-num{font-size:18px;font-weight:700;display:block}
+.profile-stat-label{font-size:12px;color:var(--text2);display:block}
+.profile-section-title{font-size:14px;font-weight:600;color:var(--text2);margin:16px 0 8px}
+.profile-reviews{display:flex;flex-direction:column;gap:8px}
+.profile-review-item{display:flex;gap:10px;padding:10px;background:var(--bg2);border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition)}
+.profile-review-item:active{background:var(--bg4)}
+.profile-review-item .pri-cover{width:40px;height:56px;border-radius:4px;overflow:hidden;flex-shrink:0;background:var(--bg3)}
+.profile-review-item .pri-cover img{width:100%;height:100%;object-fit:cover}
+.profile-review-item .pri-info{flex:1;min-width:0}
+.profile-review-item .pri-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.profile-review-item .pri-stars{font-size:12px;color:var(--warning)}
+.profile-review-item .pri-content{font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.profile-actions{display:flex;gap:8px;margin-top:16px}
+.profile-action-btn{flex:1;padding:10px;background:var(--bg2);border:0.5px solid var(--accent-border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;cursor:pointer}
+.profile-close{display:block;width:100%;margin-top:16px;padding:12px;background:none;border:0.5px solid var(--accent-border);border-radius:var(--radius-sm);color:var(--text2);font-size:14px;cursor:pointer}
+/* 关注列表 */
+.follow-list{display:flex;flex-direction:column;gap:4px}
+.follow-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg2);border-radius:var(--radius-sm);cursor:pointer}
+.follow-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--secondary));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.follow-name{font-size:14px;font-weight:600}
+.follow-username{font-size:12px;color:var(--text3)}
+/* 评价区块 */
+.review-section{padding:16px 12px;margin-top:8px}
+.review-section-loading{text-align:center;color:var(--text2);padding:20px;font-size:13px}
+.review-stats{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:9px 12px;background:var(--bg3);border-radius:var(--radius-sm)}
+.review-stats-avg{font-family:var(--font-heading);font-size:16px;font-weight:700;color:var(--accent)}
+.review-stats-count{font-size:13px;color:var(--text2)}
+.review-mine{margin-bottom:12px}
+.review-mine-info{font-size:13px;color:var(--text2)}
+.rv-stars-sm{color:var(--warning);margin-left:4px}
+.rv-mine-content{display:block;font-size:13px;color:var(--text);margin-top:4px;padding:8px;background:var(--bg2);border-radius:var(--radius-sm)}
+.review-mine-actions{display:flex;gap:8px;margin-top:8px}
+.rv-btn{font-size:13px;padding:8px 16px;border-radius:99px;border:none;cursor:pointer;font-weight:500}
+.rv-btn.write{background:var(--accent);color:#fff;width:100%}
+.rv-btn.edit{background:var(--bg4);color:var(--text)}
+.rv-btn.delete{background:var(--bg4);color:var(--danger)}
+.rv-btn.more{background:var(--bg2);color:var(--secondary);width:100%}
+.rv-btn.submit{background:var(--accent);color:#fff}
+.review-form{background:var(--bg2);border-radius:var(--radius-lg);padding:12px;margin-bottom:12px}
+.star-picker{margin-bottom:12px}
+.star-picker-label{font-size:13px;color:var(--text2);margin-bottom:6px}
+.star-picker-row{display:flex;gap:2px}
+.star-picker-row span{font-size:22px;color:var(--text3);cursor:pointer;transition:all 0.1s}
+.star-picker-row span.active{color:var(--warning);text-shadow:0 0 6px rgba(245,158,11,0.4)}
+.review-textarea{width:100%;min-height:60px;padding:10px;background:var(--bg);border:0.5px solid var(--accent-border);border-radius:var(--radius-sm);color:var(--text);font-size:14px;resize:none;margin-bottom:10px;font-family:var(--font-body)}
+.review-form-row{display:flex;align-items:center;justify-content:space-between}
+.review-spoiler-lbl{font-size:13px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px}
+.review-list{display:flex;flex-direction:column;gap:8px}
+.review-empty{text-align:center;color:var(--text3);font-size:13px;padding:20px}
+.review-item{padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm)}
+.rv-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.rv-user{font-size:13px;font-weight:600;color:var(--secondary);cursor:pointer}
+.rv-mine{font-size:10px;padding:1px 6px;background:var(--accent-glow);color:var(--accent);border-radius:99px}
+.rv-spoiler{font-size:10px;padding:1px 6px;background:rgba(239,68,68,0.15);color:var(--danger);border-radius:99px}
+.rv-date{font-size:11px;color:var(--text3);margin-left:auto}
+.rv-stars{font-size:14px;color:var(--warning)}
+.rv-score{font-weight:700;font-size:15px;color:var(--accent);margin-left:4px}
+.rv-content{margin-top:6px;font-size:14px;color:var(--text);line-height:1.5}
+.spoiler-blur{filter:blur(4px);cursor:pointer;transition:filter 0.2s}
+.spoiler-blur:hover{filter:none}
+.rv-anime{font-size:12px;color:var(--text2);margin-top:4px}
+/* 社区 Feed Tab */
+.community-header{position:sticky;top:0;z-index:10;background:var(--bg);padding:calc(var(--safe-top) + 12px) 16px 12px;border-bottom:0.5px solid var(--accent-border)}
+.community-header h2{font-family:var(--font-heading);font-size:20px;color:var(--text)}
+.community-header p{font-size:13px;color:var(--text2);margin-top:4px}
+.community-auth-area{padding:16px}
+.auth-btn-area{display:flex;gap:8px}
+.auth-login-btn,.auth-register-btn,.auth-logout-btn{padding:10px 20px;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;border:none}
+.auth-login-btn{background:var(--accent);color:#fff}
+.auth-register-btn{background:var(--bg4);color:var(--text);border:0.5px solid var(--accent-border)}
+.auth-logout-btn{background:var(--bg4);color:var(--text2);font-size:12px;padding:6px 12px}
+.auth-user-badge{font-size:14px;font-weight:600;color:var(--accent);cursor:pointer;padding:10px 0;align-self:center}
+.feed-container{display:flex;flex-direction:column;gap:2px}
+.feed-loading,.feed-error{text-align:center;color:var(--text2);padding:40px}
+.feed-empty{text-align:center;padding:40px 20px}
+.feed-empty-icon{font-size:48px;margin-bottom:12px}
+.feed-empty-text{font-size:14px;color:var(--text2);line-height:1.6}
+.feed-item{padding:12px 16px;background:var(--bg2);cursor:pointer;transition:all var(--transition);border-bottom:0.5px solid rgba(168,85,247,0.08)}
+.feed-item:active{background:var(--bg3)}
+.feed-item-header{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.feed-user{font-size:13px;font-weight:600;color:var(--secondary);cursor:pointer}
+.feed-action{font-size:12px;color:var(--text3)}
+.feed-anime{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+.feed-item-body{display:flex;flex-direction:column;gap:4px}
+.feed-stars{font-size:13px;color:var(--warning)}
+.feed-content{font-size:14px;color:var(--text);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.feed-item-time{font-size:11px;color:var(--text3);margin-top:6px}
+.feed-more-btn{width:100%;padding:12px;background:var(--bg2);color:var(--secondary);border:none;font-size:14px;cursor:pointer;margin-top:8px}
+.feed-tabs{display:flex;gap:0;margin-bottom:4px}
+.feed-tab-btn{flex:1;padding:10px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--transition)}
+.feed-tab-btn.active{border-bottom-color:var(--accent);color:var(--accent)}
+/* 社区 tab 内 reviewSection 占位修正 */
+#reviewSection{min-height:60px}
 </style>
 </head>
 <body>
@@ -745,6 +870,19 @@ img.img-fade.loaded{opacity:1}
   </div>
 </div>
 
+<!-- 社区 -->
+<div class="view" id="view-community">
+  <div class="community-header">
+    <h2>社区</h2>
+    <p>和大家一起聊番 · 紫音也在</p>
+  </div>
+  <div class="community-auth-area"><div class="auth-btn-area">
+    <button class="auth-login-btn" onclick="window.fanji.showAuthModal('login')">登录</button>
+    <button class="auth-register-btn" onclick="window.fanji.showAuthModal('register')">注册</button>
+  </div></div>
+  <div class="feed-container"></div>
+</div>
+
 <!-- 详情抽屉 -->
 <div class="drawer-bg" id="drawerBg">
   <div class="drawer" id="drawer">
@@ -808,6 +946,10 @@ img.img-fade.loaded{opacity:1}
     <div class="bn-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
     <div class="bn-label">新番</div>
   </button>
+  <button class="bn-item" data-view="community">
+    <div class="bn-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+    <div class="bn-label">社区</div>
+  </button>
   <button class="bn-item" data-view="my">
     <div class="bn-icon"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
     <div class="bn-label">我的</div>
@@ -852,6 +994,24 @@ img.img-fade.loaded{opacity:1}
   </form>
 </div>
 <input type="file" id="importFile" accept=".json" style="display:none"/>
+
+<!-- Auth 弹窗 -->
+<div class="auth-modal hidden" id="authModal">
+  <div class="auth-panel">
+    <div class="auth-title" id="authTitle">登录</div>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-field"><label>用户名</label><input id="authUsername" type="text" maxlength="20" autocomplete="username"/></div>
+    <div class="auth-field"><label>密码</label><input id="authPassword" type="password" maxlength="100" autocomplete="current-password"/></div>
+    <div class="auth-nick-row" id="authNickRow" style="display:none"><div class="auth-field"><label>昵称（选填）</label><input id="authNickname" type="text" maxlength="30"/></div></div>
+    <div class="auth-actions">
+      <button class="auth-submit-btn" id="authSubmitBtn">登录</button>
+      <button class="auth-switch-btn" id="authSwitchBtn">没有账号？去注册</button>
+    </div>
+  </div>
+</div>
+
+<!-- 用户主页面板 -->
+<div class="profile-panel hidden" id="profilePanel"></div>
 
 <script>
 // ===== 吉祥物：紫音 Shion（简约矢量风 · B站22娘同款）=====
@@ -1164,6 +1324,17 @@ let USE_WORKER_API=true;
 let workerFailStreak=0;
 const WORKER_FAIL_LIMIT=3;
 const API_BASE='https://fanji-api.pages.dev';
+
+// Community namespace — external modules 通过此命名空间与主应用通信
+window.fanji={
+  apiBase:API_BASE,
+  token:null,
+  currentUser:null,
+  // onAuthChange 由 community/feed.js 设
+  // requireAuth / logout / showAuthModal 由 community/auth.js 设
+  // showUserProfile 由 community/profile.js 设
+  // loadReviewSection 由 community/reviews.js 设
+};
 const BGM_BASE='https://api.bgm.tv';
 
 // 图片源：Bangumi 图床 lain.bgm.tv 在国内被阻断，经 CF 边缘代理（pages.dev 国内可达）；非 lain 链接原样返回
@@ -2072,6 +2243,7 @@ async function openDrawer(a,origin){
       <div class="drawer-subtitle">${sub}</div>
       <div class="drawer-tags">${tags}</div>
       ${buildDecisionCard(d)}
+      <div class="review-section" id="reviewSection"></div>
       ${buildTrackSection(d)}
       ${ratingHtml}
       <div class="char-section" id="charSection" style="display:none"></div>
@@ -2096,6 +2268,10 @@ async function openDrawer(a,origin){
       document.getElementById('descText').classList.remove('collapsed');
       document.getElementById('expandBtn').style.display='none';
     });
+    // 加载社区评价
+    if(window.fanji&&window.fanji.loadReviewSection){
+      window.fanji.loadReviewSection(d.id,document.getElementById('reviewSection'));
+    }
   }catch(e){
     body.innerHTML='<div class="message" style="padding:2rem">加载失败</div>';
   }
@@ -2238,6 +2414,13 @@ function switchView(view){
   currentView=view;
   const from=NAV_ORDER.indexOf(prev), to=NAV_ORDER.indexOf(view);
   const dir=(from>=0&&to>=0&&to<from)?-1:1;
+  // 社区 tab — 先重置标志再切视图，确保 Observer 能检测到需要加载
+  if(view==='community'){
+    const commView=document.getElementById('view-community');
+    if(commView){commView.dataset.loaded='';commView.setAttribute('data-loaded','');}
+    // 直接触发 feed 刷新，不依赖 Observer 时序
+    if(window.fanji&&window.fanji.refreshFeed)window.fanji.refreshFeed();
+  }
   const target=document.getElementById('view-'+view);
   target.style.setProperty('--vx',dir<0?'-28px':'28px');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -2660,7 +2843,7 @@ document.getElementById('iosTipClose').addEventListener('click',()=>{
 migrateFromFavorites();
 updateMyBadge();
 const hash=location.hash.slice(1);
-if(['hot','ranking','schedule','my','favorites','discover'].includes(hash)){
+if(['hot','ranking','schedule','my','favorites','discover','community'].includes(hash)){
   switchView(hash==='favorites'?'my':hash);
 }else{
   switchView('hot');
@@ -2798,5 +2981,10 @@ if(USE_WORKER_API&&!lastCalendar){
 }
 showShionSplash();
 </script>
+<script src="community/api.js" defer></script>
+<script src="community/auth.js" defer></script>
+<script src="community/reviews.js" defer></script>
+<script src="community/profile.js" defer></script>
+<script src="community/feed.js" defer></script>
 </body>
 </html>

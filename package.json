@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "FanJi 番剧探索 - 动漫发现 App",
   "scripts": {
-    "sync": "powershell -Command \"Copy-Item index.html,manifest.json,sw.js -Destination www -Force; Copy-Item *.png -Destination www -Force; Copy-Item -Recurse community -Destination www/community -Force -ErrorAction SilentlyContinue; if (Test-Path worker) { Copy-Item -Recurse worker -Destination www/worker -Force }\" && npx cap sync android",
+    "sync": "powershell -Command \"Copy-Item index.html,manifest.json,sw.js -Destination www -Force; Copy-Item *.png -Destination www -Force; if (Test-Path www/community) { Remove-Item -Recurse -Force www/community }; Copy-Item -Recurse community -Destination www/community -Force; if (Test-Path worker) { if (Test-Path www/worker) { Remove-Item -Recurse -Force www/worker }; Copy-Item -Recurse worker -Destination www/worker -Force }\" && npx cap sync android",
     "open:android": "npx cap open android",
     "build": "npm run sync && npx cap open android"
   },
